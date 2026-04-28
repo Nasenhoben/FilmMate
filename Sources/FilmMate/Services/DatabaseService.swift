@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class DatabaseService: ObservableObject {
     static let shared = DatabaseService()
 

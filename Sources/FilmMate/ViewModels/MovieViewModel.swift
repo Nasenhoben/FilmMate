@@ -67,17 +67,15 @@ final class MovieViewModel: ObservableObject {
         updateComplete = false
 
         do {
-            let movies = try await TMDBService.shared.fetchMoviesWithProviders { [weak self] progress, status in
-                // Already dispatched to main queue by ProgressCounter — set directly
-                self?.updateProgress = progress
-                self?.updateStatusText = status
+            let movies = try await TMDBService.shared.fetchMoviesWithProviders { @Sendable [weak self] progress, status in
+                Task { @MainActor [weak self] in
+                    self?.updateProgress = progress
+                    self?.updateStatusText = status
+                }
             }
-            // Defer save to next run loop so it never lands inside a render pass
-            DispatchQueue.main.async { [weak self] in
-                self?.db.save(movies)
-                self?.updateComplete = true
-                self?.isUpdating = false
-            }
+            db.save(movies)
+            updateComplete = true
+            isUpdating = false
         } catch {
             updateError = error.localizedDescription
             showUpdateError = true

@@ -33,11 +33,11 @@ actor TMDBService {
     // MARK: - Public entry point
 
     func fetchMoviesWithProviders(
-        progressCallback: @escaping (Double, String) -> Void
+        progressCallback: @escaping @Sendable (Double, String) -> Void
     ) async throws -> [Movie] {
         guard !apiKey.isEmpty else { throw TMDBError.missingAPIKey }
 
-        progressCallback(0.0, String(localized: "progress.fetching_movies"))
+        await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_movies")) }
 
         let providers = StreamingProvider.allCases
         let totalUnits = Double(providers.count * pagesPerProvider)
@@ -71,7 +71,7 @@ actor TMDBService {
         let movies = Array(movieMap.values)
             .sorted { $0.voteAverage > $1.voteAverage }
 
-        progressCallback(1.0, String(localized: "progress.done"))
+        await MainActor.run { progressCallback(1.0, String(localized: "progress.done")) }
         return movies
     }
 
@@ -139,20 +139,18 @@ actor TMDBService {
 private actor ProgressCounter {
     private var completed: Double = 0
     private let total: Double
-    private let callback: (Double, String) -> Void
+    private let callback: @Sendable (Double, String) -> Void
 
-    init(total: Double, callback: @escaping (Double, String) -> Void) {
+    init(total: Double, callback: @escaping @Sendable (Double, String) -> Void) {
         self.total = total
         self.callback = callback
     }
 
-    func increment(by amount: Double = 1) {
+    func increment(by amount: Double = 1) async {
         completed += amount
         let progress = min(completed / total, 0.98)
         let cb = callback
-        // DispatchQueue.main.async defers to the next run loop iteration,
-        // guaranteed to be outside any active SwiftUI render pass.
-        DispatchQueue.main.async {
+        await MainActor.run {
             cb(progress, String(localized: "progress.checking_providers"))
         }
     }
