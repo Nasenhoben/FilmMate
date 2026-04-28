@@ -1,0 +1,32 @@
+name: FilmMate
+options:
+  bundleIdPrefix: com.stevenfricke
+  deploymentTarget:
+    macOS: "14.0"
+  defaultConfig: Debug
+  xcodeVersion: "16.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ENABLE_HARDENED_RUNTIME: YES
+
+targets:
+  FilmMate:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/FilmMate
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.stevenfricke.FilmMate
+        INFOPLIST_FILE: Sources/FilmMate/Resources/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_EMIT_LOC_STRINGS: YES
+    entitlements:
+      path: Sources/FilmMate/Resources/FilmMate.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+        com.apple.security.network.client: true

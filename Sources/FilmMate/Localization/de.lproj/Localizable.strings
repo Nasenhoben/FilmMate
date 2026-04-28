@@ -1,0 +1,83 @@
+/* Genres */
+"genre.action" = "Action";
+"genre.adventure" = "Abenteuer";
+"genre.animation" = "Animation";
+"genre.comedy" = "Komödie";
+"genre.crime" = "Krimi";
+"genre.documentary" = "Dokumentation";
+"genre.drama" = "Drama";
+"genre.family" = "Familie";
+"genre.fantasy" = "Fantasy";
+"genre.horror" = "Horror";
+"genre.romance" = "Romantik";
+"genre.scifi" = "Sci-Fi";
+"genre.thriller" = "Thriller";
+
+/* Filter */
+"filter.providers" = "Streaminganbieter";
+"filter.genres" = "Genres";
+"filter.clear" = "Filter zurücksetzen";
+
+/* Actions */
+"action.suggest" = "5 Filme vorschlagen";
+"suggestion.title" = "Deine Filmvorschläge";
+"suggestion.subtitle" = "%d Filme ausgewählt";
+"action.suggest_now" = "Film vorschlagen";
+"action.another" = "Anderen Film";
+"action.settings" = "Einstellungen";
+"action.setup" = "Einrichten";
+
+/* Welcome */
+"welcome.title" = "Welchen Film heute?";
+"welcome.subtitle" = "Wähle Genres und Anbieter aus, um einen Film vorzuschlagen.";
+"welcome.count" = "%d Filme verfügbar";
+
+/* Empty state */
+"empty.title" = "Keine Datenbank";
+"empty.subtitle" = "Gib deinen TMDB API-Key ein und lade die Filmdatenbank herunter.";
+
+/* Settings */
+"settings.api_key" = "API-Key";
+"settings.api_key.placeholder" = "TMDB API-Key eingeben…";
+"settings.api_key.validate" = "Prüfen";
+"settings.api_key.valid" = "API-Key ist gültig";
+"settings.api_key.empty" = "Bitte einen API-Key eingeben";
+"settings.api_key.invalid" = "API-Key ungültig oder kein Internetzugang";
+"settings.language" = "Sprache";
+"settings.theme" = "Design";
+"settings.theme.system" = "System";
+"settings.theme.light" = "Hell";
+"settings.theme.dark" = "Dunkel";
+"settings.database" = "Datenbank";
+"settings.database.never" = "Noch nie";
+"settings.database.update" = "Datenbank aktualisieren";
+"settings.database.updated" = "Aktualisiert";
+"settings.database.movies" = "Filme";
+"settings.section.appearance" = "Darstellung";
+"settings.section.database" = "Datenbank";
+
+/* Progress */
+"progress.fetching_movies" = "Filme werden geladen…";
+"progress.checking_providers" = "Streaminganbieter werden geprüft…";
+"progress.done" = "Datenbank aktualisiert";
+
+/* Errors */
+"error.title" = "Fehler";
+"error.missing_api_key" = "Kein API-Key hinterlegt. Bitte in den Einstellungen eintragen.";
+"error.invalid_response" = "Ungültige Serverantwort.";
+"error.decoding_error" = "Fehler beim Verarbeiten der Daten.";
+
+/* Watchlist */
+"watchlist.title" = "WATCHLIST";
+"watchlist.add" = "Zur Watchlist";
+"watchlist.remove" = "Von Watchlist entfernen";
+"watchlist.empty" = "Noch keine Filme";
+"watchlist.more" = "+%d weitere";
+"watchlist.remove_all" = "Alle entfernen";
+
+/* Buttons */
+"button.ok" = "OK";
+
+/* Extra */
+"welcome.no_results" = "Keine Filme für diese Kombination. Filter anpassen.";
+"settings.database.updating" = "Wird aktualisiert…";

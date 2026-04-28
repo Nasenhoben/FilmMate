@@ -1,0 +1,83 @@
+/* Genres */
+"genre.action" = "Action";
+"genre.adventure" = "Adventure";
+"genre.animation" = "Animation";
+"genre.comedy" = "Comedy";
+"genre.crime" = "Crime";
+"genre.documentary" = "Documentary";
+"genre.drama" = "Drama";
+"genre.family" = "Family";
+"genre.fantasy" = "Fantasy";
+"genre.horror" = "Horror";
+"genre.romance" = "Romance";
+"genre.scifi" = "Sci-Fi";
+"genre.thriller" = "Thriller";
+
+/* Filter */
+"filter.providers" = "Streaming Providers";
+"filter.genres" = "Genres";
+"filter.clear" = "Clear Filters";
+
+/* Actions */
+"action.suggest" = "Suggest 5 Movies";
+"suggestion.title" = "Your Movie Suggestions";
+"suggestion.subtitle" = "%d movies selected";
+"action.suggest_now" = "Suggest Movie";
+"action.another" = "Another Movie";
+"action.settings" = "Settings";
+"action.setup" = "Set Up";
+
+/* Welcome */
+"welcome.title" = "What to watch today?";
+"welcome.subtitle" = "Select genres and providers to get a movie suggestion.";
+"welcome.count" = "%d movies available";
+
+/* Empty state */
+"empty.title" = "No Database";
+"empty.subtitle" = "Enter your TMDB API key and download the movie database.";
+
+/* Settings */
+"settings.api_key" = "API Key";
+"settings.api_key.placeholder" = "Enter TMDB API key…";
+"settings.api_key.validate" = "Validate";
+"settings.api_key.valid" = "API key is valid";
+"settings.api_key.empty" = "Please enter an API key";
+"settings.api_key.invalid" = "Invalid API key or no internet connection";
+"settings.language" = "Language";
+"settings.theme" = "Theme";
+"settings.theme.system" = "System";
+"settings.theme.light" = "Light";
+"settings.theme.dark" = "Dark";
+"settings.database" = "Database";
+"settings.database.never" = "Never";
+"settings.database.update" = "Update Database";
+"settings.database.updated" = "Updated";
+"settings.database.movies" = "movies";
+"settings.section.appearance" = "Appearance";
+"settings.section.database" = "Database";
+
+/* Progress */
+"progress.fetching_movies" = "Fetching movies…";
+"progress.checking_providers" = "Checking streaming providers…";
+"progress.done" = "Database updated";
+
+/* Errors */
+"error.title" = "Error";
+"error.missing_api_key" = "No API key set. Please enter one in Settings.";
+"error.invalid_response" = "Invalid server response.";
+"error.decoding_error" = "Error processing data.";
+
+/* Watchlist */
+"watchlist.title" = "WATCHLIST";
+"watchlist.add" = "Add to Watchlist";
+"watchlist.remove" = "Remove from Watchlist";
+"watchlist.empty" = "No movies yet";
+"watchlist.more" = "+%d more";
+"watchlist.remove_all" = "Remove all";
+
+/* Buttons */
+"button.ok" = "OK";
+
+/* Extra */
+"welcome.no_results" = "No movies for this combination. Try adjusting your filters.";
+"settings.database.updating" = "Updating…";
