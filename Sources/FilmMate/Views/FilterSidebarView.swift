@@ -15,6 +15,10 @@ struct FilterSidebarView: View {
                 VStack(spacing: 0) {
                     providerSection
                     Divider().padding(.horizontal, 12)
+                    ratingSection
+                    Divider().padding(.horizontal, 12)
+                    runtimeSection
+                    Divider().padding(.horizontal, 12)
                     watchlistSection
                     Divider().padding(.horizontal, 12)
                     genreSection
@@ -46,6 +50,76 @@ struct FilterSidebarView: View {
         }
         .padding(.horizontal, 10)
         .padding(.top, 6)
+        .padding(.bottom, 10)
+    }
+
+    // MARK: – Bewertungs-Filter
+
+    private var ratingSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionHeader("filter.rating")
+
+            HStack(spacing: 4) {
+                ForEach([0.0, 6.0, 7.0, 8.0], id: \.self) { rating in
+                    let isSelected = vm.minimumRating == rating
+                    Button {
+                        vm.minimumRating = rating
+                        vm.suggestedMovies = []
+                    } label: {
+                        Text(rating == 0 ? String(localized: "filter.rating.all") : "\(Int(rating))+")
+                            .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                            .background(isSelected ? Color.yellow.opacity(0.25) : Color.primary.opacity(0.06))
+                            .foregroundStyle(isSelected ? Color.yellow : Color.secondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(isSelected ? Color.yellow.opacity(0.6) : Color.clear, lineWidth: 1.5)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .animation(.easeInOut(duration: 0.12), value: isSelected)
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
+    }
+
+    // MARK: – Laufzeit-Filter
+
+    private var runtimeSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionHeader("filter.runtime")
+
+            HStack(spacing: 4) {
+                ForEach(RuntimeFilter.allCases) { filter in
+                    let isSelected = vm.runtimeFilter == filter
+                    Button {
+                        vm.runtimeFilter = filter
+                        vm.suggestedMovies = []
+                    } label: {
+                        Text(filter.label)
+                            .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                            .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
+                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .animation(.easeInOut(duration: 0.12), value: isSelected)
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.top, 12)
         .padding(.bottom, 10)
     }
 
@@ -134,7 +208,8 @@ struct FilterSidebarView: View {
             }
 
             // Clear-Link wenn aktive Filter
-            if !vm.selectedGenres.isEmpty || !vm.selectedProviders.isEmpty {
+            if !vm.selectedGenres.isEmpty || !vm.selectedProviders.isEmpty
+                || vm.minimumRating > 0 || vm.runtimeFilter != .all {
                 Button { vm.clearFilters() } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "xmark.circle")

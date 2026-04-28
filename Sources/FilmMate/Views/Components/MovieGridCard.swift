@@ -6,6 +6,7 @@ struct MovieGridCard: View {
     @ObservedObject private var watchlist = WatchlistService.shared
     @State private var appeared = false
     @State private var hovered = false
+    @State private var showDetail = false
 
     private var tmdbURL: URL? {
         URL(string: "https://www.themoviedb.org/movie/\(movie.id)")
@@ -29,11 +30,8 @@ struct MovieGridCard: View {
         }
         .onHover { hovered = $0 }
         .animation(.spring(duration: 0.2, bounce: 0.1), value: hovered)
-        .onTapGesture {
-            if let url = tmdbURL {
-                NSWorkspace.shared.open(url)
-            }
-        }
+        .onTapGesture { showDetail = true }
+        .sheet(isPresented: $showDetail) { MovieDetailView(movie: movie) }
         .cursor(.pointingHand)
     }
 

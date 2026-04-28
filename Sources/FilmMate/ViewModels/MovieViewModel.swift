@@ -5,6 +5,8 @@ import SwiftUI
 final class MovieViewModel: ObservableObject {
     @Published var selectedGenres: Set<Genre> = []
     @Published var selectedProviders: Set<StreamingProvider> = []
+    @Published var minimumRating: Double = 0.0
+    @Published var runtimeFilter: RuntimeFilter = .all
     @Published var suggestedMovies: [Movie] = []
     @Published var isLoading = false
     @Published var updateProgress: Double = 0
@@ -18,7 +20,8 @@ final class MovieViewModel: ObservableObject {
     private let db = DatabaseService.shared
 
     var filteredMovies: [Movie] {
-        db.movies(genres: selectedGenres, providers: selectedProviders)
+        db.movies(genres: selectedGenres, providers: selectedProviders,
+                  minimumRating: minimumRating, runtimeFilter: runtimeFilter)
     }
 
     var filteredCount: Int { filteredMovies.count }
@@ -56,6 +59,8 @@ final class MovieViewModel: ObservableObject {
     func clearFilters() {
         selectedGenres = []
         selectedProviders = []
+        minimumRating = 0.0
+        runtimeFilter = .all
         suggestedMovies = []
     }
 

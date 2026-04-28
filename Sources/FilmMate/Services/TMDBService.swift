@@ -68,8 +68,18 @@ actor TMDBService {
             }
         }
 
-        let movies = Array(movieMap.values)
-            .sorted { $0.voteAverage > $1.voteAverage }
+        let sorted = Array(movieMap.values).sorted { $0.voteAverage > $1.voteAverage }
+
+        // Phase 2: Laufzeiten für die Top-500 Filme nachladen
+        let top500Ids = Array(sorted.prefix(500).map(\.id))
+        await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
+        let runtimes = await fetchRuntimes(for: top500Ids)
+
+        let movies = sorted.map { movie -> Movie in
+            var m = movie
+            m.runtime = runtimes[movie.id]
+            return m
+        }
 
         await MainActor.run { progressCallback(1.0, String(localized: "progress.done")) }
         return movies
@@ -131,6 +141,58 @@ actor TMDBService {
         }
 
         return try JSONDecoder().decode(TMDBMovieResponse.self, from: data).results
+    }
+
+    // MARK: - Film-Details (Besetzung, Regisseur, Laufzeit)
+
+    func fetchMovieDetails(movieId: Int) async throws -> TMDBMovieDetailResponse {
+        guard !apiKey.isEmpty else { throw TMDBError.missingAPIKey }
+        var components = URLComponents(string: "\(baseURL)/movie/\(movieId)")!
+        components.queryItems = [
+            URLQueryItem(name: "api_key",             value: apiKey),
+            URLQueryItem(name: "language",            value: language),
+            URLQueryItem(name: "append_to_response",  value: "credits")
+        ]
+        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw TMDBError.invalidResponse
+        }
+        return try JSONDecoder().decode(TMDBMovieDetailResponse.self, from: data)
+    }
+
+    // MARK: - Laufzeit-Batch-Fetch
+
+    private func fetchRuntimes(for movieIds: [Int]) async -> [Int: Int] {
+        var runtimeMap: [Int: Int] = [:]
+        let batches = stride(from: 0, to: movieIds.count, by: maxConcurrentRequests)
+
+        for batchStart in batches {
+            let batchEnd = min(batchStart + maxConcurrentRequests, movieIds.count)
+            let batch = Array(movieIds[batchStart..<batchEnd])
+
+            await withTaskGroup(of: (Int, Int?).self) { group in
+                for id in batch {
+                    group.addTask { (id, try? await self.fetchRuntimeOnly(movieId: id)) }
+                }
+                for await (id, runtime) in group {
+                    if let runtime { runtimeMap[id] = runtime }
+                }
+            }
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+        return runtimeMap
+    }
+
+    private func fetchRuntimeOnly(movieId: Int) async throws -> Int? {
+        var components = URLComponents(string: "\(baseURL)/movie/\(movieId)")!
+        components.queryItems = [
+            URLQueryItem(name: "api_key",  value: apiKey),
+            URLQueryItem(name: "language", value: language)
+        ]
+        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        struct R: Codable { let runtime: Int? }
+        return (try? JSONDecoder().decode(R.self, from: data))?.runtime
     }
 }
 

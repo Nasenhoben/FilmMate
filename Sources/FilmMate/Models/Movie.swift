@@ -12,6 +12,7 @@ struct Movie: Identifiable, Codable, Equatable {
     let voteCount: Int
     let genreIds: [Int]
     var availableOn: [StreamingProvider]
+    var runtime: Int?
 
     var genres: [Genre] {
         Genre.from(tmdbIds: genreIds)
@@ -33,6 +34,15 @@ struct Movie: Identifiable, Codable, Equatable {
 
     var ratingFormatted: String {
         String(format: "%.1f", voteAverage)
+    }
+
+    var runtimeFormatted: String? {
+        guard let runtime else { return nil }
+        let h = runtime / 60
+        let m = runtime % 60
+        if h > 0 && m > 0 { return "\(h)h \(m)min" }
+        if h > 0 { return "\(h)h" }
+        return "\(m)min"
     }
 
     static func == (lhs: Movie, rhs: Movie) -> Bool {
@@ -88,7 +98,8 @@ struct TMDBMovie: Codable {
             voteAverage: voteAverage,
             voteCount: voteCount,
             genreIds: genreIds,
-            availableOn: providers
+            availableOn: providers,
+            runtime: nil
         )
     }
 }

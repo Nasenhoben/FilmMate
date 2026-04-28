@@ -78,6 +78,25 @@
 /* Buttons */
 "button.ok" = "OK";
 
+/* Bewertungs-Filter */
+"filter.rating" = "Bewertung";
+"filter.rating.all" = "Alle";
+
+/* Laufzeit-Filter */
+"filter.runtime" = "Laufzeit";
+"runtime.all" = "Alle";
+"runtime.short" = "Kurz";
+"runtime.medium" = "Mittel";
+"runtime.long" = "Lang";
+
+/* Film-Details */
+"detail.overview" = "Inhaltsangabe";
+"detail.cast" = "Besetzung";
+"detail.open_tmdb" = "Auf TMDB öffnen";
+
+/* Fortschritt */
+"progress.fetching_runtimes" = "Laufzeiten werden geladen…";
+
 /* Extra */
 "welcome.no_results" = "Keine Filme für diese Kombination. Filter anpassen.";
 "settings.database.updating" = "Wird aktualisiert…";

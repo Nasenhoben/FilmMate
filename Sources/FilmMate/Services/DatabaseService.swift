@@ -55,12 +55,16 @@ final class DatabaseService: ObservableObject {
 
     func movies(
         genres: Set<Genre>,
-        providers: Set<StreamingProvider>
+        providers: Set<StreamingProvider>,
+        minimumRating: Double = 0.0,
+        runtimeFilter: RuntimeFilter = .all
     ) -> [Movie] {
         movies.filter { movie in
-            let genreMatch = genres.isEmpty || !Set(movie.genreIds).isDisjoint(with: Set(genres.map(\.rawValue)))
+            let genreMatch    = genres.isEmpty || !Set(movie.genreIds).isDisjoint(with: Set(genres.map(\.rawValue)))
             let providerMatch = providers.isEmpty || !Set(movie.availableOn).isDisjoint(with: providers)
-            return genreMatch && providerMatch
+            let ratingMatch   = movie.voteAverage >= minimumRating
+            let runtimeMatch  = runtimeFilter.matches(movie.runtime)
+            return genreMatch && providerMatch && ratingMatch && runtimeMatch
         }
     }
 
