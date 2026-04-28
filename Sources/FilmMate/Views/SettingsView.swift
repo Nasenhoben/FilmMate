@@ -116,22 +116,6 @@ struct SettingsView: View {
                 settingsCard {
                     cardHeader(icon: "paintbrush.fill", color: .purple, title: String(localized: "settings.section.appearance"))
 
-                    settingsRow(label: String(localized: "settings.language"), icon: "globe") {
-                        Picker("", selection: Binding(
-                            get: { settings.language },
-                            set: { settings.setLanguage($0) }
-                        )) {
-                            ForEach(settings.availableLanguages, id: \.code) { lang in
-                                Text(lang.name).tag(lang.code)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 150)
-                        .labelsHidden()
-                    }
-
-                    Divider().padding(.vertical, 2)
-
                     settingsRow(label: String(localized: "settings.theme"), icon: "circle.lefthalf.filled") {
                         HStack(spacing: 6) {
                             ForEach(ColorSchemePreference.allCases, id: \.self) { scheme in

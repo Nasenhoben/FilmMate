@@ -1,6 +1,5 @@
 import Foundation
 import SwiftUI
-import AppKit
 
 final class SettingsViewModel: ObservableObject {
     // API key lives in Keychain, not UserDefaults
@@ -11,10 +10,8 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
-    @AppStorage("app_language") var language: String = "de-DE"
     @AppStorage("color_scheme") var colorSchemeRaw: String = "system"
 
-    @Published var isRestarting = false
     @Published var apiKeyState: APIKeyState = .unchecked
     @Published var isValidating = false
 
@@ -31,10 +28,6 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
-    var availableLanguages: [(code: String, name: String)] {
-        [("de-DE", "Deutsch"), ("en-US", "English")]
-    }
-
     func validateAPIKey() async {
         guard !apiKey.trimmingCharacters(in: .whitespaces).isEmpty else {
             apiKeyState = .invalid(String(localized: "settings.api_key.empty"))
@@ -46,26 +39,6 @@ final class SettingsViewModel: ObservableObject {
         apiKeyState = valid
             ? .valid
             : .invalid(String(localized: "settings.api_key.invalid"))
-    }
-
-    func setLanguage(_ code: String) {
-        guard code != language else { return }
-        language = code
-        UserDefaults.standard.set([String(code.prefix(2))], forKey: "AppleLanguages")
-        UserDefaults.standard.synchronize()
-        isRestarting = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
-            Self.restartApp()
-        }
-    }
-
-    static func restartApp() {
-        let bundlePath = Bundle.main.bundlePath
-        let task = Process()
-        task.launchPath = "/bin/sh"
-        task.arguments = ["-c", "sleep 0.8 && open \"\(bundlePath)\""]
-        task.launch()
-        NSApp.terminate(nil)
     }
 }
 

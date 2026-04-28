@@ -23,13 +23,6 @@ struct MainView: View {
         }
         .preferredColorScheme(settings.colorScheme)
         .toolbar(.hidden, for: .windowToolbar)
-        .overlay {
-            if settings.isRestarting {
-                RestartOverlay(targetLanguage: settings.language)
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: settings.isRestarting)
     }
 
     @ViewBuilder

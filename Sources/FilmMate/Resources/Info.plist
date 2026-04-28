@@ -28,10 +28,9 @@
 	<string>Copyright © 2024 Steven Fricke. All rights reserved.</string>
 	<key>CFBundleLocalizations</key>
 	<array>
-		<string>en</string>
 		<string>de</string>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>de</string>
 </dict>
 </plist>
