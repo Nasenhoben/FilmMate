@@ -11,9 +11,9 @@ enum RuntimeFilter: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .all:    return String(localized: "runtime.all")
-        case .short:  return "< 90 min"
-        case .medium: return "90–120 min"
-        case .long:   return "> 120 min"
+        case .short:  return "< 90min"
+        case .medium: return "90–120min"
+        case .long:   return "120+"
         }
     }
 
