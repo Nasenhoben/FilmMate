@@ -89,6 +89,10 @@ FilmMate/
 2. **Filtering** — AND-logic is applied: a movie must match at least one selected genre **and** be available on at least one selected provider.
 3. **Suggestions** — 5 movies are picked randomly from the filtered set, avoiding duplicates across consecutive suggestions.
 
+## AI-Generated
+
+This project was fully created with the assistance of AI ([Claude](https://claude.ai) by Anthropic). The entire codebase — architecture, logic, UI, and tooling — was generated through an AI-assisted development session.
+
 ## License
 
 MIT
