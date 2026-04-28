@@ -53,7 +53,7 @@ final class DatabaseService: ObservableObject {
 
     // MARK: - Query
 
-    func movies(
+    func filtered(
         genres: Set<Genre>,
         providers: Set<StreamingProvider>,
         minimumRating: Double = 0.0,
@@ -72,7 +72,7 @@ final class DatabaseService: ObservableObject {
         genres: Set<Genre>,
         providers: Set<StreamingProvider>
     ) -> Movie? {
-        movies(genres: genres, providers: providers).randomElement()
+        filtered(genres: genres, providers: providers).randomElement()
     }
 
     func moviesByGenre() -> [(Genre, [Movie])] {

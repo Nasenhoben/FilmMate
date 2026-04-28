@@ -20,8 +20,8 @@ final class MovieViewModel: ObservableObject {
     private let db = DatabaseService.shared
 
     var filteredMovies: [Movie] {
-        db.movies(genres: selectedGenres, providers: selectedProviders,
-                  minimumRating: minimumRating, runtimeFilter: runtimeFilter)
+        db.filtered(genres: selectedGenres, providers: selectedProviders,
+                    minimumRating: minimumRating, runtimeFilter: runtimeFilter)
     }
 
     var filteredCount: Int { filteredMovies.count }

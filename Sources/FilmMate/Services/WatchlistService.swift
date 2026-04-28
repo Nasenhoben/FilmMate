@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class WatchlistService: ObservableObject {
     static let shared = WatchlistService()
 
