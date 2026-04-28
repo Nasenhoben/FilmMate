@@ -22,8 +22,8 @@ enum RuntimeFilter: String, CaseIterable, Identifiable {
         switch self {
         case .all:    return true
         case .short:  return runtime < 90
-        case .medium: return runtime >= 90 && runtime <= 150
-        case .long:   return runtime > 150
+        case .medium: return runtime >= 90 && runtime <= 120
+        case .long:   return runtime > 120
         }
     }
 }
