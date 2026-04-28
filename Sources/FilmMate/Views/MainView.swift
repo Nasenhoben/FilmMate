@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct MainView: View {
     @StateObject private var vm = MovieViewModel()
@@ -22,7 +23,7 @@ struct MainView: View {
             SettingsSheet(settings: settings, vm: vm, isPresented: $showSettings)
         }
         .preferredColorScheme(settings.colorScheme)
-        .toolbar(.hidden, for: .windowToolbar)
+        .background(WindowConfigurator())
     }
 
     @ViewBuilder
@@ -188,6 +189,22 @@ struct SuggestedMovieView: View {
         }
         .animation(Animation.spring(duration: 0.35), value: vm.suggestedMovies.map(\.id))
     }
+}
+
+// MARK: - Window configurator (transparente Titelleiste + Ampel-Buttons)
+
+private struct WindowConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            guard let window = view.window else { return }
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.styleMask.insert(.fullSizeContentView)
+        }
+        return view
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
 // MARK: - Settings sheet

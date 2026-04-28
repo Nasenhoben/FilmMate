@@ -9,7 +9,6 @@ struct FilmMateApp: App {
             MainView()
                 .environmentObject(settings)
         }
-        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentMinSize)
         .defaultSize(width: 1000, height: 640)
         .commands {
