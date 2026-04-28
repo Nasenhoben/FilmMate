@@ -211,7 +211,7 @@ struct FilterSidebarView: View {
 
     private func sectionHeader(_ key: String) -> some View {
         Text(String(localized: String.LocalizationValue(key)).uppercased())
-            .font(.system(size: 10, weight: .bold))
+            .font(.system(size: 10, weight: .heavy))
             .foregroundStyle(.secondary)
             .kerning(0.8)
     }
