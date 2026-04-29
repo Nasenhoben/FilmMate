@@ -5,8 +5,8 @@ actor TMDBService {
 
     private let baseURL = "https://api.themoviedb.org/3"
     private let minimumVotes = 50
-    private let pagesPerRatingSort = 40     // 40 × 20 = 800 top-bewertete Filme pro Anbieter
-    private let pagesPerDateSort   = 10     // 10 × 20 = 200 neueste Filme pro Anbieter
+    private let pagesPerRatingSort = 50     // 50 × 20 = 1.000 top-bewertete Filme pro Anbieter
+    private let pagesPerDateSort   = 10     // 10 × 20 =   200 neueste Filme pro Anbieter
     private let maxConcurrentRequests = 5   // parallele Requests
 
     private var apiKey: String {
