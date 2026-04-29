@@ -1,98 +1,101 @@
 # FilmMate
 
-A native macOS app that suggests movies available on your streaming services, built with SwiftUI.
+Eine native macOS-App, die Filmvorschläge basierend auf deinen Streaming-Diensten und Genre-Präferenzen liefert – gebaut mit SwiftUI.
 
 ![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-blue)
-![Swift](https://img.shields.io/badge/swift-5.9-orange)
+![Swift](https://img.shields.io/badge/swift-5.10-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## Features
 
-- **Smart Suggestions** — Get 5 random movie suggestions filtered by genre and streaming provider
-- **Streaming Providers** — Filter by Netflix, Amazon Prime, Disney+, HBO Max, and Paramount+
-- **13 Genres** — Action, Adventure, Animation, Comedy, Crime, Documentary, Drama, Family, Fantasy, Horror, Romance, Sci-Fi, Thriller
-- **Watchlist** — Save movies to a personal watchlist, persisted between sessions
-- **Movie Details** — Each card shows poster, rating, synopsis, and genre tags
-- **TMDB Integration** — Click any movie card to open its TMDB page in the browser
-- **Offline Database** — Movies are downloaded once and stored locally for fast, offline filtering
-- **Multi-language** — Full German and English localization with instant language switching
-- **Dark / Light / System theme** — Respects your macOS appearance preference
+- **6 Filmvorschläge** — Zufällige Vorschläge aus der gefilterten Filmliste, in einem 3×2-Raster dargestellt
+- **Streaming-Anbieter** — Filterung nach Netflix, Amazon Prime, Disney+, HBO Max und Paramount+
+- **Bewertungsfilter** — Mindestbewertung: Alle / 6+ / 7+ / 8+
+- **Laufzeitfilter** — < 90 min / 90–120 min / 120+
+- **13 Genres** — Action, Abenteuer, Animation, Komödie, Krimi, Dokumentation, Drama, Familie, Fantasy, Horror, Romantik, Sci-Fi, Thriller
+- **Film-Detailansicht** — Poster, Bewertung, Laufzeit, Regisseur, Besetzung, Genres und Streaming-Anbieter auf einen Blick
+- **Laufzeit on-demand** — Fehlende Laufzeiten werden automatisch beim Anzeigen der Karte von der TMDB API nachgeladen und lokal gespeichert
+- **Watchlist** — Filme speichern und zwischen Sessions erhalten
+- **Offline-Datenbank** — Filme werden einmalig heruntergeladen und lokal als JSON gecacht
+- **TMDB-Integration** — Filmdetails direkt auf TMDB öffnen
+- **Dark Mode** — Folgt der macOS-Systemeinstellung
 
-## Screenshots
+## Voraussetzungen
 
-> _Add screenshots here_
+- macOS 14.0 (Sonoma) oder neuer
+- Ein kostenloser [TMDB API-Key](https://www.themoviedb.org/settings/api)
 
-## Requirements
+## Setup
 
-- macOS 14.0 (Sonoma) or later
-- A free [TMDB API key](https://www.themoviedb.org/settings/api)
-
-## Getting Started
-
-### 1. Clone the repository
+### 1. Repository klonen
 
 ```bash
 git clone https://github.com/Nasenhoben/FilmMate.git
 cd FilmMate
 ```
 
-### 2. Install dependencies
+### 2. Xcode-Projekt generieren
 
-The project uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the Xcode project.
+Das Projekt verwendet [XcodeGen](https://github.com/yonaskolb/XcodeGen):
 
 ```bash
 brew install xcodegen
 xcodegen generate
 ```
 
-### 3. Open in Xcode
+### 3. In Xcode öffnen
 
 ```bash
 open FilmMate.xcodeproj
 ```
 
-### 4. Add your TMDB API key
+### 4. TMDB API-Key eintragen
 
-1. Launch the app
-2. Click **Settings** in the sidebar
-3. Enter your TMDB API key and click **Validate**
-4. Click **Update Database** to download the movie catalog
+1. App starten
+2. **Einstellungen** in der Sidebar öffnen
+3. TMDB API-Key eingeben und auf **Prüfen** klicken
+4. **Datenbank aktualisieren** klicken – die App lädt die Filmliste herunter
 
-## Architecture
+## Architektur
 
 ```
-FilmMate/
+Sources/FilmMate/
 ├── Models/
-│   ├── Movie.swift              # Movie model + TMDB API response types
-│   ├── Genre.swift              # Genre enum with TMDB IDs, colors, emojis
-│   └── StreamingProvider.swift  # Streaming provider enum
+│   ├── Movie.swift              # Film-Model + TMDB API-Typen
+│   ├── Genre.swift              # Genre-Enum mit TMDB-IDs, Farben, Emojis
+│   ├── StreamingProvider.swift  # Streaming-Anbieter-Enum
+│   └── RuntimeFilter.swift      # Laufzeit-Filter-Enum
 ├── Services/
-│   ├── TMDBService.swift        # TMDB API client (actor)
-│   ├── DatabaseService.swift    # Local movie database + filtering
-│   ├── WatchlistService.swift   # Watchlist persistence
-│   ├── KeychainService.swift    # Secure API key storage
-│   └── LanguageManager.swift    # Runtime language switching
+│   ├── TMDBService.swift        # TMDB API-Client (Swift actor)
+│   ├── DatabaseService.swift    # Lokale Filmdatenbank + Filterlogik
+│   ├── WatchlistService.swift   # Watchlist-Persistenz
+│   └── KeychainService.swift    # API-Key-Speicherung
 ├── ViewModels/
-│   ├── MovieViewModel.swift     # Main content logic
-│   └── SettingsViewModel.swift  # Settings + API key validation
+│   ├── MovieViewModel.swift     # Hauptlogik: Filter, Vorschläge
+│   └── SettingsViewModel.swift  # Einstellungen + API-Key-Validierung
 └── Views/
-    ├── MainView.swift           # Root layout
-    ├── FilterSidebarView.swift  # Sidebar (providers, watchlist, genres)
-    ├── SettingsView.swift       # Settings sheet
+    ├── MainView.swift           # Root-Layout + Welcome/Empty-State
+    ├── FilterSidebarView.swift  # Sidebar (Anbieter, Filter, Watchlist, Genres)
+    ├── MovieDetailView.swift    # Film-Detailsheet
+    ├── SettingsView.swift       # Einstellungen-Sheet
     └── Components/
-        └── MovieGridCard.swift  # Individual movie card
+        └── MovieGridCard.swift  # Einzelne Filmkarte im 3×2-Raster
 ```
 
-## How It Works
+## So funktioniert es
 
-1. **Database Download** — The app fetches movies from TMDB's `/discover/movie` endpoint, filtering server-side by streaming provider for the German market (`watch_region=DE`). Up to 50 pages per provider are fetched concurrently.
-2. **Filtering** — AND-logic is applied: a movie must match at least one selected genre **and** be available on at least one selected provider.
-3. **Suggestions** — 5 movies are picked randomly from the filtered set, avoiding duplicates across consecutive suggestions.
+1. **Datenbank-Download** — Die App ruft `/discover/movie` von TMDB ab, gefiltert nach Streaming-Anbieter für den deutschen Markt (`watch_region=DE`). Pro Anbieter werden zwei Durchläufe gemacht:
+   - 800 Filme sortiert nach Bewertung (`vote_average.desc`)
+   - 200 Filme sortiert nach Erscheinungsdatum (`primary_release_date.desc`)
 
-## AI-Generated
+   So enthält die Datenbank sowohl Klassiker als auch neue Releases. Duplikate werden automatisch zusammengeführt.
 
-This project was fully created with the assistance of AI ([Claude](https://claude.ai) by Anthropic). The entire codebase — architecture, logic, UI, and tooling — was generated through an AI-assisted development session.
+2. **Filterung** — Ein Film muss alle aktiven Filter erfüllen: mindestens ein passendes Genre, mindestens ein ausgewählter Anbieter, Mindestbewertung und Laufzeit.
 
-## License
+3. **Vorschläge** — 6 Filme werden zufällig aus der gefilterten Menge gewählt. Bereits gezeigte Filme werden in der nächsten Runde vermieden.
+
+4. **Laufzeit** — Fehlende Laufzeiten werden beim ersten Anzeigen einer Filmkarte automatisch von der API nachgeladen und dauerhaft in der lokalen Datenbank gespeichert.
+
+## Lizenz
 
 MIT
