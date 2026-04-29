@@ -159,7 +159,7 @@ struct WelcomeView: View {
 struct SuggestedMovieView: View {
     @ObservedObject var vm: MovieViewModel
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 5)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 14), count: 3)
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
