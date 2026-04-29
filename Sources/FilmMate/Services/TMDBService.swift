@@ -4,8 +4,9 @@ actor TMDBService {
     static let shared = TMDBService()
 
     private let baseURL = "https://api.themoviedb.org/3"
-    private let minimumVotes = 200
-    private let pagesPerProvider = 50       // 50 × 20 = 1.000 Filme pro Anbieter
+    private let minimumVotes = 50
+    private let pagesPerRatingSort = 40     // 40 × 20 = 800 top-bewertete Filme pro Anbieter
+    private let pagesPerDateSort   = 10     // 10 × 20 = 200 neueste Filme pro Anbieter
     private let maxConcurrentRequests = 5   // parallele Requests
 
     private var apiKey: String {
@@ -40,32 +41,37 @@ actor TMDBService {
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_movies")) }
 
         let providers = StreamingProvider.allCases
-        let totalUnits = Double(providers.count * pagesPerProvider)
+        let totalUnits = Double(providers.count * (pagesPerRatingSort + pagesPerDateSort))
         let counter = ProgressCounter(total: totalUnits, callback: progressCallback)
 
-        // Fetch all providers concurrently
+        // Fetch all providers concurrently – both sort strategies
         var movieMap: [Int: Movie] = [:]
+
+        func merge(_ results: [(TMDBMovie, StreamingProvider)]) {
+            for (tmdbMovie, provider) in results {
+                if var existing = movieMap[tmdbMovie.id] {
+                    if !existing.availableOn.contains(provider) {
+                        existing.availableOn.append(provider)
+                    }
+                    movieMap[tmdbMovie.id] = existing
+                } else {
+                    movieMap[tmdbMovie.id] = tmdbMovie.toMovie(providers: [provider])
+                }
+            }
+        }
 
         try await withThrowingTaskGroup(of: [(TMDBMovie, StreamingProvider)].self) { group in
             for provider in providers {
                 group.addTask {
-                    try await self.fetchAllPages(for: provider, counter: counter)
+                    try await self.fetchAllPages(for: provider, sortBy: "vote_average.desc",
+                                                 pages: self.pagesPerRatingSort, counter: counter)
+                }
+                group.addTask {
+                    try await self.fetchAllPages(for: provider, sortBy: "primary_release_date.desc",
+                                                 pages: self.pagesPerDateSort, counter: counter)
                 }
             }
-
-            for try await results in group {
-                for (tmdbMovie, provider) in results {
-                    if var existing = movieMap[tmdbMovie.id] {
-                        // Movie already found on another provider – merge
-                        if !existing.availableOn.contains(provider) {
-                            existing.availableOn.append(provider)
-                        }
-                        movieMap[tmdbMovie.id] = existing
-                    } else {
-                        movieMap[tmdbMovie.id] = tmdbMovie.toMovie(providers: [provider])
-                    }
-                }
-            }
+            for try await results in group { merge(results) }
         }
 
         let sorted = Array(movieMap.values).sorted { $0.voteAverage > $1.voteAverage }
@@ -89,20 +95,22 @@ actor TMDBService {
 
     private func fetchAllPages(
         for provider: StreamingProvider,
+        sortBy: String,
+        pages: Int,
         counter: ProgressCounter
     ) async throws -> [(TMDBMovie, StreamingProvider)] {
         var results: [(TMDBMovie, StreamingProvider)] = []
 
         // Fetch pages in batches to respect rate limits
-        let batches = stride(from: 1, through: pagesPerProvider, by: maxConcurrentRequests)
+        let batches = stride(from: 1, through: pages, by: maxConcurrentRequests)
 
         for batchStart in batches {
-            let batchEnd = min(batchStart + maxConcurrentRequests - 1, pagesPerProvider)
+            let batchEnd = min(batchStart + maxConcurrentRequests - 1, pages)
 
             try await withThrowingTaskGroup(of: [TMDBMovie].self) { group in
                 for page in batchStart...batchEnd {
                     group.addTask {
-                        try await self.discoverPage(provider: provider, page: page)
+                        try await self.discoverPage(provider: provider, sortBy: sortBy, page: page)
                     }
                 }
 
@@ -123,12 +131,12 @@ actor TMDBService {
 
     // MARK: - Single discover page
 
-    private func discoverPage(provider: StreamingProvider, page: Int) async throws -> [TMDBMovie] {
+    private func discoverPage(provider: StreamingProvider, sortBy: String, page: Int) async throws -> [TMDBMovie] {
         var components = URLComponents(string: "\(baseURL)/discover/movie")!
         components.queryItems = [
             URLQueryItem(name: "api_key",              value: apiKey),
             URLQueryItem(name: "language",             value: language),
-            URLQueryItem(name: "sort_by",              value: "vote_average.desc"),
+            URLQueryItem(name: "sort_by",              value: sortBy),
             URLQueryItem(name: "vote_count.gte",       value: "\(minimumVotes)"),
             URLQueryItem(name: "with_watch_providers", value: "\(provider.rawValue)"),
             URLQueryItem(name: "watch_region",         value: "DE"),
