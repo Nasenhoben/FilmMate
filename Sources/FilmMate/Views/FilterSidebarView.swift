@@ -235,9 +235,40 @@ struct FilterSidebarView: View {
 
     // MARK: – Bottom bar
 
+    private var databaseOutdated: Bool {
+        guard let lastUpdated = DatabaseService.shared.lastUpdated else { return false }
+        return Date().timeIntervalSince(lastUpdated) > 14 * 24 * 3600
+    }
+
     private var bottomBar: some View {
         VStack(spacing: 8) {
             Divider()
+
+            // Hinweis wenn DB älter als 14 Tage
+            if databaseOutdated {
+                Button(action: onSettings) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.clockwise.circle.fill")
+                            .font(.system(size: 12))
+                        Text(String(localized: "db.outdated_hint"))
+                            .font(.system(size: 11, weight: .medium))
+                            .multilineTextAlignment(.leading)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(Color.orange.opacity(0.15))
+                    .foregroundStyle(Color.orange)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(Color.orange.opacity(0.3), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
 
             Button { vm.suggestRandom() } label: {
                 HStack(spacing: 7) {

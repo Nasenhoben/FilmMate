@@ -79,6 +79,9 @@
 /* Buttons */
 "button.ok" = "OK";
 
+/* Datenbank-Hinweis */
+"db.outdated_hint" = "Datenbank veraltet – Aktualisieren?";
+
 /* Bewertungs-Filter */
 "filter.rating" = "Bewertung";
 "filter.rating.all" = "Alle";
