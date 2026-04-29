@@ -183,6 +183,10 @@ actor TMDBService {
         return runtimeMap
     }
 
+    func fetchRuntime(movieId: Int) async throws -> Int? {
+        try await fetchRuntimeOnly(movieId: movieId)
+    }
+
     private func fetchRuntimeOnly(movieId: Int) async throws -> Int? {
         var components = URLComponents(string: "\(baseURL)/movie/\(movieId)")!
         components.queryItems = [

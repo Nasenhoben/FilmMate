@@ -45,6 +45,15 @@ struct Movie: Identifiable, Codable, Equatable {
         return "\(m)min"
     }
 
+    static func formatRuntime(_ minutes: Int) -> String? {
+        guard minutes > 0 else { return nil }
+        let h = minutes / 60
+        let m = minutes % 60
+        if h > 0 && m > 0 { return "\(h)h \(m)min" }
+        if h > 0 { return "\(h)h" }
+        return "\(m)min"
+    }
+
     static func == (lhs: Movie, rhs: Movie) -> Bool {
         lhs.id == rhs.id
     }

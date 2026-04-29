@@ -7,10 +7,7 @@ struct MovieGridCard: View {
     @State private var appeared = false
     @State private var hovered = false
     @State private var showDetail = false
-
-    private var tmdbURL: URL? {
-        URL(string: "https://www.themoviedb.org/movie/\(movie.id)")
-    }
+    @State private var resolvedRuntime: String? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,12 +24,25 @@ struct MovieGridCard: View {
         .offset(y: appeared ? 0 : 10)
         .onAppear {
             withAnimation(.spring(duration: 0.35, bounce: 0.08)) { appeared = true }
+            resolvedRuntime = movie.runtimeFormatted
+            if movie.runtime == nil { fetchRuntimeIfNeeded() }
         }
         .onHover { hovered = $0 }
         .animation(.spring(duration: 0.2, bounce: 0.1), value: hovered)
         .onTapGesture { showDetail = true }
         .sheet(isPresented: $showDetail) { MovieDetailView(movie: movie) }
         .cursor(.pointingHand)
+    }
+
+    private func fetchRuntimeIfNeeded() {
+        Task {
+            guard let minutes = try? await TMDBService.shared.fetchRuntime(movieId: movie.id),
+                  let formatted = Movie.formatRuntime(minutes) else { return }
+            await MainActor.run {
+                resolvedRuntime = formatted
+                DatabaseService.shared.updateRuntime(movieId: movie.id, runtime: minutes)
+            }
+        }
     }
 
     // MARK: – Colored provider banner
@@ -96,7 +106,7 @@ struct MovieGridCard: View {
                 Spacer()
 
                 // Laufzeit
-                if let runtime = movie.runtimeFormatted {
+                if let runtime = resolvedRuntime {
                     HStack(spacing: 3) {
                         Image(systemName: "clock")
                             .font(.system(size: 9))
@@ -141,7 +151,7 @@ struct MovieGridCard: View {
 
             // Laufzeit + Genre-Emojis
             HStack(spacing: 6) {
-                if let runtime = movie.runtimeFormatted {
+                if let runtime = resolvedRuntime {
                     HStack(spacing: 3) {
                         Image(systemName: "clock")
                             .font(.system(size: 9))

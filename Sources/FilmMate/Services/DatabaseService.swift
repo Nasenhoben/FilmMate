@@ -23,6 +23,14 @@ final class DatabaseService: ObservableObject {
         load()
     }
 
+    func updateRuntime(movieId: Int, runtime: Int) {
+        guard let idx = movies.firstIndex(where: { $0.id == movieId }) else { return }
+        movies[idx].runtime = runtime
+        if let data = try? JSONEncoder().encode(movies) {
+            try? data.write(to: storageURL, options: .atomicWrite)
+        }
+    }
+
     func save(_ movies: [Movie]) {
         self.movies = movies
         self.lastUpdated = Date()
