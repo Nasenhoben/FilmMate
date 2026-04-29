@@ -70,12 +70,12 @@ struct FilterSidebarView: View {
                             .font(.system(size: 11, weight: isSelected ? .bold : .medium))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 5)
-                            .background(isSelected ? Color.yellow.opacity(0.25) : Color.primary.opacity(0.06))
-                            .foregroundStyle(isSelected ? Color.yellow : Color.secondary)
+                            .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
+                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .strokeBorder(isSelected ? Color.yellow.opacity(0.6) : Color.clear, lineWidth: 1.5)
+                                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
                             )
                     }
                     .buttonStyle(.plain)
@@ -302,14 +302,19 @@ struct ProviderToggleRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                // Color indicator
-                RoundedRectangle(cornerRadius: 2)
+            HStack(spacing: 9) {
+                // Runder Farb-Badge
+                Circle()
                     .fill(provider.color)
-                    .frame(width: 3, height: 22)
+                    .frame(width: 8, height: 8)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(provider.color.opacity(0.3), lineWidth: 1)
+                            .scaleEffect(1.6)
+                    )
 
                 Text(provider.name)
-                    .font(.system(size: 13, weight: isSelected ? .bold : .medium))
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Color.primary : Color.secondary)
                     .lineLimit(1)
 
@@ -317,16 +322,16 @@ struct ProviderToggleRow: View {
 
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(provider.color)
                         .transition(.scale.combined(with: .opacity))
                 }
             }
-            .padding(.horizontal, 6)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .background(
                 isSelected
-                    ? provider.color.opacity(0.1)
+                    ? provider.color.opacity(0.12)
                     : (hovered ? Color.primary.opacity(0.05) : Color.clear)
             )
             .clipShape(RoundedRectangle(cornerRadius: 7))

@@ -90,51 +90,64 @@ struct EmptyDatabaseView: View {
 
 struct WelcomeView: View {
     @ObservedObject var vm: MovieViewModel
-    @State private var hovered = false
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 32) {
+            // Icon
             ZStack {
                 Circle()
-                    .fill(Color.accentColor.opacity(0.1))
-                    .frame(width: 100, height: 100)
+                    .fill(Color.accentColor.opacity(0.08))
+                    .frame(width: 110, height: 110)
+                Circle()
+                    .fill(Color.accentColor.opacity(0.05))
+                    .frame(width: 140, height: 140)
                 Image(systemName: "popcorn.fill")
-                    .font(.system(size: 46))
+                    .font(.system(size: 48))
                     .foregroundStyle(Color.accentColor)
             }
 
-            VStack(spacing: 8) {
+            VStack(spacing: 10) {
                 Text(String(localized: "welcome.title"))
-                    .font(.title2).fontWeight(.bold)
-                Text(String(localized: "welcome.subtitle"))
-                    .font(.subheadline).foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center).frame(maxWidth: 320)
-            }
+                    .font(.title).fontWeight(.bold)
 
-            Button { vm.suggestRandom() } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "shuffle")
-                    Text(String(localized: "action.suggest_now"))
+                if vm.filteredCount > 0 {
+                    // Prominente Filmanzahl
+                    HStack(spacing: 6) {
+                        Text("\(vm.filteredCount)")
+                            .font(.system(size: 28, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Color.accentColor)
+                        Text(String(localized: "welcome.count_suffix"))
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 20).padding(.vertical, 8)
+                    .background(Color.accentColor.opacity(0.08))
+                    .clipShape(Capsule())
+                    .transition(.scale.combined(with: .opacity))
+                } else if vm.hasDatabase {
+                    Text(String(localized: "welcome.no_results"))
+                        .font(.subheadline).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .transition(.opacity)
+                } else {
+                    Text(String(localized: "welcome.subtitle"))
+                        .font(.subheadline).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center).frame(maxWidth: 320)
                 }
-                .font(.headline)
-                .padding(.horizontal, 26).padding(.vertical, 11)
-                .background(vm.filteredCount > 0 ? Color.accentColor : Color.secondary.opacity(0.15))
-                .foregroundStyle(vm.filteredCount > 0 ? Color.white : Color.secondary)
-                .clipShape(RoundedRectangle(cornerRadius: 11))
-                .scaleEffect(hovered && vm.filteredCount > 0 ? 1.04 : 1.0)
-                .shadow(color: vm.filteredCount > 0 ? Color.accentColor.opacity(0.3) : .clear, radius: 10, y: 3)
             }
-            .buttonStyle(.plain)
-            .disabled(vm.filteredCount == 0)
-            .onHover { hovered = $0 }
-            .animation(.spring(duration: 0.2), value: hovered)
-            .keyboardShortcut("r", modifiers: .command)
 
-            if vm.filteredCount == 0 && vm.hasDatabase {
-                Text(String(localized: "welcome.no_results"))
-                    .font(.caption).foregroundStyle(.secondary)
-                    .transition(.opacity)
+            // Hinweis auf Tastaturkürzel
+            HStack(spacing: 4) {
+                Image(systemName: "keyboard")
+                    .font(.system(size: 11))
+                Text("⌘R")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                Text("·")
+                Text(String(localized: "action.suggest_now"))
+                    .font(.system(size: 11))
             }
+            .foregroundStyle(.tertiary)
+            .opacity(vm.filteredCount > 0 ? 1 : 0)
         }
         .animation(.spring(duration: 0.3), value: vm.filteredCount)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

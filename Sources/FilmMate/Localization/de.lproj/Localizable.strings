@@ -31,6 +31,7 @@
 "welcome.title" = "Welchen Film heute?";
 "welcome.subtitle" = "Wähle Genres und Anbieter aus, um einen Film vorzuschlagen.";
 "welcome.count" = "%d Filme verfügbar";
+"welcome.count_suffix" = "Filme verfügbar";
 
 /* Empty state */
 "empty.title" = "Keine Datenbank";
