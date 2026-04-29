@@ -41,8 +41,15 @@ final class DatabaseService: ObservableObject {
 
     private func load() {
         guard let data = try? Data(contentsOf: storageURL) else { return }
-        if let decoded = try? JSONDecoder().decode([Movie].self, from: data) {
-            movies = decoded
+        do {
+            movies = try JSONDecoder().decode([Movie].self, from: data)
+        } catch {
+            print("⚠️ DatabaseService: Datenbank konnte nicht geladen werden – \(error)")
+            print("   Datei: \(storageURL.path)")
+            // Datei umbenennen statt löschen, damit keine Daten verloren gehen
+            let backupURL = storageURL.deletingPathExtension().appendingPathExtension("json.bak")
+            try? FileManager.default.moveItem(at: storageURL, to: backupURL)
+            print("   Backup gespeichert unter: \(backupURL.path)")
         }
 
         if let metaData = try? Data(contentsOf: metaURL),
