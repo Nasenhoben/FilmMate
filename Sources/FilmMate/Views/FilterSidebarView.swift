@@ -103,6 +103,8 @@ struct FilterSidebarView: View {
                     } label: {
                         Text(filter.label)
                             .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 5)
                             .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
