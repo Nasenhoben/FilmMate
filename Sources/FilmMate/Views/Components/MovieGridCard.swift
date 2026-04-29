@@ -75,26 +75,40 @@ struct MovieGridCard: View {
             .frame(height: 180)
             .clipped()
 
-            // Gradient + rating
+            // Gradient + rating + runtime
             LinearGradient(
-                colors: [.clear, .black.opacity(0.6)],
-                startPoint: .center,
+                colors: [.clear, .black.opacity(0.75)],
+                startPoint: .top,
                 endPoint: .bottom
             )
 
-            HStack(spacing: 3) {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 8))
-                    .foregroundStyle(.yellow)
-                Text(movie.ratingFormatted)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white)
+            HStack {
+                // Rating
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.yellow)
+                    Text(movie.ratingFormatted)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+
+                Spacer()
+
+                // Laufzeit
+                if let runtime = movie.runtimeFormatted {
+                    HStack(spacing: 3) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.white.opacity(0.8))
+                        Text(runtime)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.9))
+                    }
+                }
             }
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(.black.opacity(0.5))
-            .clipShape(Capsule())
-            .padding(7)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 8)
         }
     }
 

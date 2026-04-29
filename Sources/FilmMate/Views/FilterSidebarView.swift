@@ -27,7 +27,7 @@ struct FilterSidebarView: View {
             .scrollIndicators(.never)
             bottomBar
         }
-        .frame(width: 280)
+        .frame(width: 240)
         .background(Color(nsColor: .controlBackgroundColor))
     }
 

@@ -18,7 +18,7 @@ struct MainView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(minWidth: 910, minHeight: 520)
+        .frame(minWidth: 870, minHeight: 520)
         .sheet(isPresented: $showSettings) {
             SettingsSheet(settings: settings, vm: vm, isPresented: $showSettings)
         }
