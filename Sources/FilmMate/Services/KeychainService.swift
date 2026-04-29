@@ -27,7 +27,7 @@ final class KeychainService {
 
         let query: [CFString: Any] = [
             kSecClass:       kSecClassGenericPassword,
-            kSecAttrService: "com.stevenfricke.FilmMate",
+            kSecAttrService: "com.filmmate.FilmMate",
             kSecAttrAccount: "tmdb_api_key",
             kSecReturnData:  true,
             kSecMatchLimit:  kSecMatchLimitOne
@@ -42,7 +42,7 @@ final class KeychainService {
 
         let deleteQuery: [CFString: Any] = [
             kSecClass:       kSecClassGenericPassword,
-            kSecAttrService: "com.stevenfricke.FilmMate",
+            kSecAttrService: "com.filmmate.FilmMate",
             kSecAttrAccount: "tmdb_api_key"
         ]
         SecItemDelete(deleteQuery as CFDictionary)

@@ -1,6 +1,6 @@
 name: FilmMate
 options:
-  bundleIdPrefix: com.stevenfricke
+  bundleIdPrefix: com.filmmate
   deploymentTarget:
     macOS: "14.0"
   defaultConfig: Debug
@@ -20,7 +20,7 @@ targets:
       - path: Sources/FilmMate
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.stevenfricke.FilmMate
+        PRODUCT_BUNDLE_IDENTIFIER: com.filmmate.FilmMate
         INFOPLIST_FILE: Sources/FilmMate/Resources/Info.plist
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
