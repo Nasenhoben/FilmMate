@@ -107,6 +107,7 @@ struct MovieGridCard: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, 9)
             .padding(.vertical, 8)
         }
@@ -138,12 +139,27 @@ struct MovieGridCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            // Genre emojis
-            HStack(spacing: 3) {
-                ForEach(movie.genres.prefix(3)) { genre in
-                    Text(genre.emoji)
-                        .font(.system(size: 11))
-                        .help(genre.localizedName)
+            // Laufzeit + Genre-Emojis
+            HStack(spacing: 6) {
+                if let runtime = movie.runtimeFormatted {
+                    HStack(spacing: 3) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                        Text(runtime)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    }
+                    Text("·")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary.opacity(0.5))
+                }
+                HStack(spacing: 3) {
+                    ForEach(movie.genres.prefix(3)) { genre in
+                        Text(genre.emoji)
+                            .font(.system(size: 11))
+                            .help(genre.localizedName)
+                    }
                 }
             }
         }
