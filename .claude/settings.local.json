@@ -29,7 +29,11 @@
       "Bash(gh repo *)",
       "Bash(git push *)",
       "Bash(git checkout *)",
-      "Bash(gh pr create --base main --head master --title 'FilmMate: full feature implementation' --body ' *)"
+      "Bash(gh pr create --base main --head master --title 'FilmMate: full feature implementation' --body ' *)",
+      "Bash(sudo xcode-select *)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project \"/Users/stevenfricke/Dev/Meine Projekte/FilmMate/FilmMate/FilmMate.xcodeproj\" -scheme FilmMate -configuration Debug build)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project FilmMate.xcodeproj -scheme FilmMate -configuration Debug build)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

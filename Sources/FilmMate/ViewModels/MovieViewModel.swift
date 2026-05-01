@@ -7,6 +7,7 @@ final class MovieViewModel: ObservableObject {
     @Published var selectedProviders: Set<StreamingProvider> = []
     @Published var minimumRating: Double = 0.0
     @Published var runtimeFilter: RuntimeFilter = .all
+    @Published var mediaTypeFilter: MediaTypeFilter = .all
     @Published var suggestedMovies: [Movie] = []
     @Published var isLoading = false
     @Published var updateProgress: Double = 0
@@ -21,7 +22,8 @@ final class MovieViewModel: ObservableObject {
 
     var filteredMovies: [Movie] {
         db.filtered(genres: selectedGenres, providers: selectedProviders,
-                    minimumRating: minimumRating, runtimeFilter: runtimeFilter)
+                    minimumRating: minimumRating, runtimeFilter: runtimeFilter,
+                    mediaTypeFilter: mediaTypeFilter)
     }
 
     var filteredCount: Int { filteredMovies.count }
@@ -61,6 +63,7 @@ final class MovieViewModel: ObservableObject {
         selectedProviders = []
         minimumRating = 0.0
         runtimeFilter = .all
+        mediaTypeFilter = .all
         suggestedMovies = []
     }
 
@@ -72,13 +75,28 @@ final class MovieViewModel: ObservableObject {
         updateComplete = false
 
         do {
+            // Phase 1: Filme (0% → 45%)
             let movies = try await TMDBService.shared.fetchMoviesWithProviders { @Sendable [weak self] progress, status in
                 Task { @MainActor [weak self] in
-                    self?.updateProgress = progress
+                    self?.updateProgress = progress * 0.45
                     self?.updateStatusText = status
                 }
             }
-            db.save(movies)
+
+            // Phase 2: Serien (45% → 90%)
+            let series = try await TMDBService.shared.fetchSeriesWithProviders { @Sendable [weak self] progress, status in
+                Task { @MainActor [weak self] in
+                    self?.updateProgress = 0.45 + progress * 0.45
+                    self?.updateStatusText = status
+                }
+            }
+
+            // Phase 3: Speichern (90% → 100%)
+            await MainActor.run {
+                self.updateProgress = 0.99
+                self.updateStatusText = String(localized: "progress.done")
+            }
+            db.save(movies + series)
             updateComplete = true
             isUpdating = false
         } catch {

@@ -15,6 +15,9 @@ enum Genre: Int, CaseIterable, Identifiable, Codable {
     case romance = 10749
     case scienceFiction = 878
     case thriller = 53
+    case mystery = 9648
+    case actionAdventure = 10759
+    case sciFiFantasy = 10765
 
     var id: Int { rawValue }
 
@@ -32,7 +35,10 @@ enum Genre: Int, CaseIterable, Identifiable, Codable {
         case .horror:        return String(localized: "genre.horror")
         case .romance:       return String(localized: "genre.romance")
         case .scienceFiction: return String(localized: "genre.scifi")
-        case .thriller:      return String(localized: "genre.thriller")
+        case .thriller:       return String(localized: "genre.thriller")
+        case .mystery:        return String(localized: "genre.mystery")
+        case .actionAdventure: return String(localized: "genre.action_adventure")
+        case .sciFiFantasy:   return String(localized: "genre.scifi_fantasy")
         }
     }
 
@@ -51,6 +57,9 @@ enum Genre: Int, CaseIterable, Identifiable, Codable {
         case .romance:       return "❤️"
         case .scienceFiction: return "🚀"
         case .thriller:      return "😱"
+        case .mystery:       return "🔍"
+        case .actionAdventure: return "⚡"
+        case .sciFiFantasy:  return "🌌"
         }
     }
 
@@ -69,6 +78,9 @@ enum Genre: Int, CaseIterable, Identifiable, Codable {
         case .romance:        return Color(red: 0.95, green: 0.30, blue: 0.55) // pink
         case .scienceFiction: return Color(red: 0.05, green: 0.55, blue: 0.95) // blue
         case .thriller:       return Color(red: 0.80, green: 0.40, blue: 0.10) // burnt orange
+        case .mystery:        return Color(red: 0.30, green: 0.40, blue: 0.55) // slate blue
+        case .actionAdventure: return Color(red: 0.85, green: 0.30, blue: 0.15) // deep orange
+        case .sciFiFantasy:   return Color(red: 0.20, green: 0.45, blue: 0.80) // deep blue
         }
     }
 

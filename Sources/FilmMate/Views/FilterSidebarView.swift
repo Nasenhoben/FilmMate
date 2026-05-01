@@ -13,6 +13,8 @@ struct FilterSidebarView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
+                    contentTypeSection
+                    Divider().padding(.horizontal, 12)
                     providerSection
                     Divider().padding(.horizontal, 12)
                     ratingSection
@@ -29,6 +31,43 @@ struct FilterSidebarView: View {
         }
         .frame(width: 240)
         .background(Color(nsColor: .controlBackgroundColor))
+    }
+
+    // MARK: – Inhaltstyp (Film / Alle / Serie)
+
+    private var contentTypeSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionHeader("filter.content_type")
+
+            HStack(spacing: 4) {
+                ForEach(MediaTypeFilter.allCases) { filter in
+                    let isSelected = vm.mediaTypeFilter == filter
+                    Button {
+                        vm.mediaTypeFilter = filter
+                        vm.suggestedMovies = []
+                    } label: {
+                        Text(filter.label)
+                            .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                            .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
+                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .animation(.easeInOut(duration: 0.12), value: isSelected)
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
     }
 
     // MARK: – Streaming Providers
@@ -211,7 +250,7 @@ struct FilterSidebarView: View {
 
             // Clear-Link wenn aktive Filter
             if !vm.selectedGenres.isEmpty || !vm.selectedProviders.isEmpty
-                || vm.minimumRating > 0 || vm.runtimeFilter != .all {
+                || vm.minimumRating > 0 || vm.runtimeFilter != .all || vm.mediaTypeFilter != .all {
                 Button { vm.clearFilters() } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "xmark.circle")
@@ -391,7 +430,8 @@ struct WatchlistRowItem: View {
                 .foregroundStyle(Color.accentColor.opacity(0.7))
 
             Button {
-                if let url = URL(string: "https://www.themoviedb.org/movie/\(movie.id)") {
+                let path = movie.mediaType == .series ? "tv" : "movie"
+                if let url = URL(string: "https://www.themoviedb.org/\(path)/\(movie.id)") {
                     NSWorkspace.shared.open(url)
                 }
             } label: {
