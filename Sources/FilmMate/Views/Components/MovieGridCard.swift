@@ -25,7 +25,9 @@ struct MovieGridCard: View {
         .onAppear {
             withAnimation(.spring(duration: 0.35, bounce: 0.08)) { appeared = true }
             resolvedRuntime = movie.runtimeFormatted
-            if movie.runtime == nil { fetchRuntimeIfNeeded() }
+        }
+        .task(id: movie.id) {
+            if movie.runtime == nil { await fetchRuntimeIfNeeded() }
         }
         .onHover { hovered = $0 }
         .animation(.spring(duration: 0.2, bounce: 0.1), value: hovered)
@@ -34,15 +36,11 @@ struct MovieGridCard: View {
         .cursor(.pointingHand)
     }
 
-    private func fetchRuntimeIfNeeded() {
-        Task {
-            guard let minutes = try? await TMDBService.shared.fetchRuntime(movieId: movie.id),
-                  let formatted = Movie.formatRuntime(minutes) else { return }
-            await MainActor.run {
-                resolvedRuntime = formatted
-                DatabaseService.shared.updateRuntime(movieId: movie.id, runtime: minutes)
-            }
-        }
+    private func fetchRuntimeIfNeeded() async {
+        guard let minutes = try? await TMDBService.shared.fetchRuntime(movieId: movie.id),
+              let formatted = Movie.formatRuntime(minutes) else { return }
+        resolvedRuntime = formatted
+        DatabaseService.shared.updateRuntime(movieId: movie.id, runtime: minutes)
     }
 
     // MARK: – Colored provider banner

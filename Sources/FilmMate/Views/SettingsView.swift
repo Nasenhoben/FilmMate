@@ -218,7 +218,7 @@ struct SettingsView: View {
                         Task { await vm.updateDatabase() }
                     } label: {
                         HStack(spacing: 8) {
-                            Image(systemName: vm.isUpdating ? "stop.circle" : "arrow.clockwise")
+                            Image(systemName: "arrow.clockwise")
                                 .font(.callout)
                             Text(vm.isUpdating
                                  ? String(localized: "settings.database.updating")

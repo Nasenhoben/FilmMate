@@ -180,7 +180,6 @@ struct SuggestedMovieView: View {
                         .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
-                    .keyboardShortcut("r", modifiers: .command)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
@@ -254,5 +253,6 @@ struct SettingsSheet: View {
             SettingsView(settings: settings, vm: vm)
         }
         .frame(width: 500)
+        .onDisappear { vm.updateComplete = false }
     }
 }
