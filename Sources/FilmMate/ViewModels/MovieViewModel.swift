@@ -54,8 +54,8 @@ final class MovieViewModel: ObservableObject {
         guard filteredCount > 0 else { return }
         let previous = Set(suggestedMovies.map(\.id))
         var pool = filteredMovies.filter { !previous.contains($0.id) }
-        if pool.count < 6 { pool = filteredMovies }
-        suggestedMovies = Array(pool.shuffled().prefix(6))
+        if pool.count < 8 { pool = filteredMovies }
+        suggestedMovies = Array(pool.shuffled().prefix(8))
     }
 
     func clearFilters() {

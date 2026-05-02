@@ -46,7 +46,7 @@ struct MainView: View {
             .animation(.easeInOut(duration: 0.18), value: activeTab)
         }
         .ignoresSafeArea(edges: .top)
-        .frame(minWidth: 700, minHeight: 520)
+        .frame(minWidth: 800, minHeight: 560)
         .sheet(isPresented: $showSettings) {
             SettingsSheet(settings: settings, vm: vm, isPresented: $showSettings)
         }

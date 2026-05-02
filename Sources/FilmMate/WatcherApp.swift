@@ -10,7 +10,7 @@ struct WatcherApp: App {
                 .environmentObject(settings)
         }
         .windowResizability(.contentMinSize)
-        .defaultSize(width: 1000, height: 640)
+        .defaultSize(width: 1100, height: 680)
         .commands {
             CommandGroup(replacing: .newItem) {}
         }

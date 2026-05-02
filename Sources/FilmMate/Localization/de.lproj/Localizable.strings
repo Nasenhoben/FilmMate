@@ -22,7 +22,7 @@
 "content.series" = "Serien";
 
 /* Actions */
-"action.suggest" = "5 Titel vorschlagen";
+"action.suggest" = "8 Titel vorschlagen";
 "suggestion.title" = "Deine Vorschläge";
 "suggestion.subtitle" = "%d Titel ausgewählt";
 "action.suggest_now" = "Titel vorschlagen";
