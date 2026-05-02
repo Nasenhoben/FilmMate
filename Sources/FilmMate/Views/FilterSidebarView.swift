@@ -425,21 +425,45 @@ struct WatchlistRowItem: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: "bookmark.fill")
-                .font(.system(size: 9))
-                .foregroundStyle(Color.accentColor.opacity(0.7))
+            // Farbbalken der Anbieter links
+            if !movie.availableOn.isEmpty {
+                VStack(spacing: 2) {
+                    ForEach(movie.availableOn) { provider in
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(provider.color)
+                            .frame(width: 3, height: 10)
+                    }
+                }
+            } else {
+                Image(systemName: "bookmark.fill")
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color.accentColor.opacity(0.7))
+            }
 
+            // Titel + Anbieter-Namen
             Button {
                 let path = movie.mediaType == .series ? "tv" : "movie"
                 if let url = URL(string: "https://www.themoviedb.org/\(path)/\(movie.id)") {
                     NSWorkspace.shared.open(url)
                 }
             } label: {
-                Text(movie.title)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color.primary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(movie.title)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color.primary)
+                        .lineLimit(1)
+
+                    if !movie.availableOn.isEmpty {
+                        HStack(spacing: 3) {
+                            ForEach(movie.availableOn) { provider in
+                                Text(provider.name)
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundStyle(provider.color)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
 
@@ -456,7 +480,7 @@ struct WatchlistRowItem: View {
             }
         }
         .padding(.horizontal, 6)
-        .padding(.vertical, 4)
+        .padding(.vertical, 5)
         .background(hovered ? Color.primary.opacity(0.05) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: 5))
         .contentShape(Rectangle())
