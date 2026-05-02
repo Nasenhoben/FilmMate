@@ -8,6 +8,7 @@ struct MovieGridCard: View {
     @State private var hovered = false
     @State private var showDetail = false
     @State private var resolvedRuntime: String? = nil
+    @State private var isLoadingRuntime = false
 
     private var displayRuntime: String? {
         if movie.mediaType == .series {
@@ -17,6 +18,21 @@ struct MovieGridCard: View {
             return nil
         }
         return resolvedRuntime
+    }
+
+    private var mediaTypeBadge: some View {
+        let isSeries = movie.mediaType == .series
+        return HStack(spacing: 3) {
+            Image(systemName: isSeries ? "tv" : "film")
+                .font(.system(size: 8, weight: .bold))
+            Text(isSeries ? String(localized: "media.series") : String(localized: "media.movie"))
+                .font(.system(size: 9, weight: .bold))
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(isSeries ? Color.indigo.opacity(0.85) : Color.gray.opacity(0.75))
+        .clipShape(Capsule())
     }
 
     var body: some View {
@@ -49,6 +65,8 @@ struct MovieGridCard: View {
     }
 
     private func fetchRuntimeIfNeeded() async {
+        isLoadingRuntime = true
+        defer { isLoadingRuntime = false }
         guard let minutes = try? await TMDBService.shared.fetchRuntime(movieId: movie.id),
               let formatted = Movie.formatRuntime(minutes) else { return }
         resolvedRuntime = formatted
@@ -79,7 +97,7 @@ struct MovieGridCard: View {
     // MARK: – Poster with rating overlay
 
     private var posterSection: some View {
-        ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .bottom) {
             AsyncImage(url: movie.posterURL) { image in
                 image.resizable().aspectRatio(2/3, contentMode: .fill)
             } placeholder: {
@@ -94,6 +112,12 @@ struct MovieGridCard: View {
             .frame(maxWidth: .infinity)
             .frame(height: 180)
             .clipped()
+
+            // Medientyp-Badge oben rechts
+            .overlay(alignment: .topTrailing) {
+                mediaTypeBadge
+                    .padding(6)
+            }
 
             // Gradient + rating + runtime
             LinearGradient(
@@ -116,8 +140,13 @@ struct MovieGridCard: View {
                 Spacer()
 
                 // Laufzeit / Staffeln
-                if let info = displayRuntime {
-                    HStack(spacing: 3) {
+                HStack(spacing: 3) {
+                    if isLoadingRuntime {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                            .frame(width: 12, height: 12)
+                            .tint(.white.opacity(0.7))
+                    } else if let info = displayRuntime {
                         Image(systemName: movie.mediaType == .series ? "tv" : "clock")
                             .font(.system(size: 9))
                             .foregroundStyle(.white.opacity(0.8))
@@ -161,19 +190,29 @@ struct MovieGridCard: View {
 
             // Laufzeit/Staffeln + Genre-Emojis
             HStack(spacing: 6) {
-                if let info = displayRuntime {
-                    HStack(spacing: 3) {
+                HStack(spacing: 3) {
+                    if isLoadingRuntime {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                            .frame(width: 10, height: 10)
+                    } else {
                         Image(systemName: movie.mediaType == .series ? "tv" : "clock")
                             .font(.system(size: 9))
                             .foregroundStyle(.secondary)
-                        Text(info)
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
+                        if let info = displayRuntime {
+                            Text(info)
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("−")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary.opacity(0.4))
+                        }
                     }
-                    Text("·")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary.opacity(0.5))
                 }
+                Text("·")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary.opacity(0.4))
                 HStack(spacing: 3) {
                     ForEach(movie.genres.prefix(3)) { genre in
                         Text(genre.emoji)

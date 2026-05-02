@@ -94,6 +94,10 @@
 "tab.discover" = "Entdecken";
 "tab.watchlist" = "Watchlist";
 
+/* Medientyp-Badge */
+"media.movie" = "Film";
+"media.series" = "Serie";
+
 /* Buttons */
 "button.ok" = "OK";
 
