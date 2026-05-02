@@ -1,100 +1,85 @@
 import SwiftUI
 import AppKit
 
-struct FilterSidebarView: View {
+// MARK: - Filter Popover Content
+
+struct FilterPopoverContent: View {
     @ObservedObject var vm: MovieViewModel
-    @ObservedObject private var watchlist = WatchlistService.shared
-    let onSettings: () -> Void
-    @Binding var activeTab: AppTab
 
-    var body: some View {
-        VStack(spacing: 0) {
-            // Platzhalter für die Ampel-Buttons der Titelleiste
-            Color.clear.frame(height: 22)
-
-            VStack(spacing: 0) {
-                contentTypeSection
-                Divider().padding(.horizontal, 12)
-                providerSection
-                Divider().padding(.horizontal, 12)
-                filterSection
-                Divider().padding(.horizontal, 12)
-                genreSection
-            }
-            bottomBar
-        }
-        .frame(width: 240)
-        .ignoresSafeArea(edges: .top)
-        .background(Color(nsColor: .controlBackgroundColor))
+    private var hasActiveFilters: Bool {
+        vm.mediaTypeFilter != .all || !vm.selectedProviders.isEmpty ||
+        vm.minimumRating > 0 || vm.runtimeFilter != .all || !vm.selectedGenres.isEmpty
     }
 
-    // MARK: – Inhaltstyp (Film / Alle / Serie)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            contentTypeSection
+            Divider().padding(.horizontal, 12)
+            providerSection
+            Divider().padding(.horizontal, 12)
+            filterSection
+            Divider().padding(.horizontal, 12)
+            genreSection
+
+            if hasActiveFilters {
+                Divider().padding(.horizontal, 12)
+                Button { vm.clearFilters() } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "xmark.circle")
+                            .font(.caption)
+                        Text(String(localized: "filter.clear"))
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+        }
+        .frame(width: 260)
+        .animation(.spring(duration: 0.25), value: hasActiveFilters)
+    }
+
+    // MARK: – Inhaltstyp
 
     private var contentTypeSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 5) {
             sectionHeader("filter.content_type")
-
             HStack(spacing: 4) {
-                // Alle / Filme / Serien
                 ForEach(MediaTypeFilter.allCases) { filter in
-                    let isSelected = activeTab == .discover && vm.mediaTypeFilter == filter
+                    let isSelected = vm.mediaTypeFilter == filter
                     Button {
-                        withAnimation(.easeInOut(duration: 0.18)) { activeTab = .discover }
                         vm.mediaTypeFilter = filter
                         vm.suggestedMovies = []
                     } label: {
                         Text(filter.label)
                             .font(.system(size: 11, weight: isSelected ? .bold : .medium))
                             .lineLimit(1)
-                            .minimumScaleFactor(0.7)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 5)
                             .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
                             .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
-                            )
+                            .overlay(RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5))
                     }
                     .buttonStyle(.plain)
                     .animation(.easeInOut(duration: 0.12), value: isSelected)
                 }
-
-                // Watchlist-Button
-                let isWatchlist = activeTab == .watchlist
-                Button {
-                    withAnimation(.easeInOut(duration: 0.18)) { activeTab = .watchlist }
-                } label: {
-                    Text(String(localized: "tab.watchlist"))
-                        .font(.system(size: 11, weight: isWatchlist ? .bold : .medium))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 5)
-                        .background(isWatchlist ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
-                        .foregroundStyle(isWatchlist ? Color.accentColor : Color.secondary)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .strokeBorder(isWatchlist ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
-                        )
-                }
-                .buttonStyle(.plain)
-                .animation(.easeInOut(duration: 0.12), value: isWatchlist)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.top, 4)
-        .padding(.bottom, 6)
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
     }
 
-    // MARK: – Streaming Providers
+    // MARK: – Streaminganbieter
 
     private var providerSection: some View {
         VStack(alignment: .leading, spacing: 3) {
             sectionHeader("filter.providers")
-
             VStack(spacing: 1) {
                 ForEach(StreamingProvider.allCases) { provider in
                     ProviderToggleRow(
@@ -106,16 +91,15 @@ struct FilterSidebarView: View {
                 }
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.top, 6)
-        .padding(.bottom, 6)
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
     }
 
-    // MARK: – Bewertung + Laufzeit (kombiniert)
+    // MARK: – Bewertung + Laufzeit
 
     private var filterSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Bewertung
+        VStack(alignment: .leading, spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
                 sectionHeader("filter.rating")
                 HStack(spacing: 4) {
@@ -128,7 +112,7 @@ struct FilterSidebarView: View {
                             Text(rating == 0 ? String(localized: "filter.rating.all") : "\(Int(rating))+")
                                 .font(.system(size: 11, weight: isSelected ? .bold : .medium))
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 4)
+                                .padding(.vertical, 5)
                                 .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
                                 .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
                                 .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -141,7 +125,6 @@ struct FilterSidebarView: View {
                 }
             }
 
-            // Laufzeit
             VStack(alignment: .leading, spacing: 4) {
                 sectionHeader("filter.runtime")
                 HStack(spacing: 4) {
@@ -154,9 +137,9 @@ struct FilterSidebarView: View {
                             Text(filter.label)
                                 .font(.system(size: 11, weight: isSelected ? .bold : .medium))
                                 .lineLimit(1)
-                                .minimumScaleFactor(0.7)
+                                .minimumScaleFactor(0.8)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 4)
+                                .padding(.vertical, 5)
                                 .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
                                 .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
                                 .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -169,95 +152,16 @@ struct FilterSidebarView: View {
                 }
             }
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 12)
         .padding(.top, 8)
-        .padding(.bottom, 8)
-    }
-
-    // MARK: – Watchlist
-
-    private var watchlistSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                sectionHeader("watchlist.title")
-                Spacer()
-                if !watchlist.movies.isEmpty {
-                    HStack(spacing: 6) {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.18)) { activeTab = .watchlist }
-                        } label: {
-                            HStack(spacing: 2) {
-                                Text("\(watchlist.movies.count)")
-                                    .font(.system(size: 9, weight: .semibold))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 2)
-                                    .background(Color.accentColor)
-                                    .clipShape(Capsule())
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 8, weight: .semibold))
-                                    .foregroundStyle(Color.accentColor.opacity(0.7))
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .help(String(localized: "watchlist.show_all"))
-
-                        Button { watchlist.removeAll() } label: {
-                            Image(systemName: "trash")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                        .help(String(localized: "watchlist.remove_all"))
-                    }
-                }
-            }
-
-            if watchlist.movies.isEmpty {
-                HStack(spacing: 5) {
-                    Image(systemName: "bookmark")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary.opacity(0.5))
-                    Text(String(localized: "watchlist.empty"))
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary.opacity(0.6))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 4)
-            } else {
-                VStack(spacing: 2) {
-                    ForEach(watchlist.movies.prefix(3)) { movie in
-                        WatchlistRowItem(movie: movie) {
-                            watchlist.remove(movie)
-                        }
-                    }
-                }
-
-                if watchlist.movies.count > 3 {
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.18)) { activeTab = .watchlist }
-                    } label: {
-                        Text(String(format: String(localized: "watchlist.more"), watchlist.movies.count - 3))
-                            .font(.system(size: 11))
-                            .foregroundStyle(Color.accentColor.opacity(0.8))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 2)
-                }
-            }
-        }
-        .padding(.horizontal, 10)
-        .padding(.top, 12)
         .padding(.bottom, 10)
-        .animation(.spring(duration: 0.25), value: watchlist.movies.count)
     }
 
     // MARK: – Genres
 
     private var genreSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 5) {
             sectionHeader("filter.genres")
-
             LazyVGrid(
                 columns: [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)],
                 spacing: 4
@@ -271,111 +175,10 @@ struct FilterSidebarView: View {
                     }
                 }
             }
-
-            // Clear-Link wenn aktive Filter
-            if !vm.selectedGenres.isEmpty || !vm.selectedProviders.isEmpty
-                || vm.minimumRating > 0 || vm.runtimeFilter != .all || vm.mediaTypeFilter != .all {
-                Button { vm.clearFilters() } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "xmark.circle")
-                            .font(.caption)
-                        Text(String(localized: "filter.clear"))
-                            .font(.caption)
-                    }
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 4)
-                }
-                .buttonStyle(.plain)
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
-            }
         }
-        .padding(.horizontal, 10)
-        .padding(.top, 6)
-        .padding(.bottom, 8)
-        .animation(.spring(duration: 0.25), value: vm.selectedGenres.isEmpty && vm.selectedProviders.isEmpty)
-    }
-
-    // MARK: – Bottom bar
-
-    private var databaseOutdated: Bool {
-        guard let lastUpdated = DatabaseService.shared.lastUpdated else { return false }
-        return Date().timeIntervalSince(lastUpdated) > 14 * 24 * 3600
-    }
-
-    private var bottomBar: some View {
-        VStack(spacing: 8) {
-            Divider()
-
-            // Hinweis wenn DB älter als 14 Tage
-            if databaseOutdated {
-                Button(action: onSettings) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.clockwise.circle.fill")
-                            .font(.system(size: 12))
-                        Text(String(localized: "db.outdated_hint"))
-                            .font(.system(size: 11, weight: .medium))
-                            .multilineTextAlignment(.leading)
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
-                    .background(Color.orange.opacity(0.15))
-                    .foregroundStyle(Color.orange)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(Color.orange.opacity(0.3), lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-
-            Button { vm.suggestRandom() } label: {
-                HStack(spacing: 7) {
-                    Image(systemName: "shuffle")
-                        .font(.callout)
-                    Text(String(localized: "action.suggest_now"))
-                        .font(.callout)
-                        .fontWeight(.semibold)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 9)
-                .background(
-                    vm.hasDatabase && vm.filteredCount > 0
-                        ? Color.accentColor
-                        : Color.secondary.opacity(0.12)
-                )
-                .foregroundStyle(
-                    vm.hasDatabase && vm.filteredCount > 0 ? Color.white : Color.secondary
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 9))
-            }
-            .buttonStyle(.plain)
-            .disabled(!vm.hasDatabase || vm.filteredCount == 0)
-            .keyboardShortcut("r", modifiers: .command)
-
-            Button(action: onSettings) {
-                HStack(spacing: 6) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 12))
-                    Text(String(localized: "action.settings"))
-                        .font(.system(size: 12, weight: .medium))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 7)
-                .background(Color.primary.opacity(0.07))
-                .foregroundStyle(Color.primary.opacity(0.7))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
-            .keyboardShortcut(",", modifiers: .command)
-        }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
         .padding(.bottom, 12)
-        .padding(.top, 6)
     }
 
     // MARK: – Helper
@@ -399,15 +202,10 @@ struct ProviderToggleRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 9) {
-                // Runder Farb-Badge
                 Circle()
                     .fill(provider.color)
                     .frame(width: 8, height: 8)
-                    .overlay(
-                        Circle()
-                            .strokeBorder(provider.color.opacity(0.3), lineWidth: 1)
-                            .scaleEffect(1.6)
-                    )
+                    .overlay(Circle().strokeBorder(provider.color.opacity(0.3), lineWidth: 1).scaleEffect(1.6))
 
                 Text(provider.name)
                     .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
@@ -424,7 +222,7 @@ struct ProviderToggleRow: View {
                 }
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 3)
+            .padding(.vertical, 4)
             .background(
                 isSelected
                     ? provider.color.opacity(0.12)
@@ -455,7 +253,6 @@ struct WatchlistRowItem: View {
             }
         } label: {
             HStack(spacing: 6) {
-                // Titel
                 Text(movie.title)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Color.primary)
@@ -463,7 +260,6 @@ struct WatchlistRowItem: View {
 
                 Spacer(minLength: 4)
 
-                // Anbieter-Kürzel rechts neben dem Titel (z. B. "N/A")
                 if !movie.availableOn.isEmpty {
                     HStack(spacing: 2) {
                         ForEach(movie.availableOn) { provider in
@@ -478,7 +274,6 @@ struct WatchlistRowItem: View {
                     }
                 }
 
-                // Entfernen-Button beim Hover
                 if hovered {
                     Button(action: onRemove) {
                         Image(systemName: "xmark")
@@ -529,13 +324,8 @@ struct GenreToggleTile: View {
             )
             .foregroundStyle(isSelected ? genre.color : Color.secondary)
             .clipShape(RoundedRectangle(cornerRadius: 6))
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(
-                        isSelected ? genre.color.opacity(0.65) : Color.clear,
-                        lineWidth: 1.5
-                    )
-            )
+            .overlay(RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(isSelected ? genre.color.opacity(0.65) : Color.clear, lineWidth: 1.5))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

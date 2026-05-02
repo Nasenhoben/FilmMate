@@ -26,20 +26,14 @@ enum AppTab: CaseIterable {
 struct MainView: View {
     @StateObject private var vm = MovieViewModel()
     @EnvironmentObject private var settings: SettingsViewModel
-    @ObservedObject private var watchlist = WatchlistService.shared
     @State private var showSettings = false
+    @State private var showFilter = false
     @State private var activeTab: AppTab = .discover
 
     var body: some View {
-        HStack(spacing: 0) {
-            FilterSidebarView(
-                vm: vm,
-                onSettings: { showSettings = true },
-                activeTab: $activeTab
-            )
-
+        VStack(spacing: 0) {
+            topBar
             Divider()
-
             ZStack {
                 Color(nsColor: .windowBackgroundColor).ignoresSafeArea()
                 if activeTab == .discover {
@@ -51,7 +45,8 @@ struct MainView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.easeInOut(duration: 0.18), value: activeTab)
         }
-        .frame(minWidth: 870, minHeight: 520)
+        .ignoresSafeArea(edges: .top)
+        .frame(minWidth: 700, minHeight: 520)
         .sheet(isPresented: $showSettings) {
             SettingsSheet(settings: settings, vm: vm, isPresented: $showSettings)
         }
@@ -59,7 +54,128 @@ struct MainView: View {
         .background(WindowConfigurator())
     }
 
-    // MARK: - Discover content
+    // MARK: - Top bar
+
+    private var activeFilterCount: Int {
+        (vm.mediaTypeFilter != .all ? 1 : 0) +
+        (vm.selectedProviders.isEmpty ? 0 : 1) +
+        (vm.minimumRating > 0 ? 1 : 0) +
+        (vm.runtimeFilter != .all ? 1 : 0) +
+        (vm.selectedGenres.isEmpty ? 0 : 1)
+    }
+
+    private var databaseOutdated: Bool {
+        guard let lastUpdated = DatabaseService.shared.lastUpdated else { return false }
+        return Date().timeIntervalSince(lastUpdated) > 14 * 24 * 3600
+    }
+
+    private var topBar: some View {
+        HStack(spacing: 10) {
+            // Tab switcher
+            HStack(spacing: 2) {
+                ForEach(AppTab.allCases, id: \.self) { tab in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.18)) { activeTab = tab }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: tab.icon)
+                                .font(.system(size: 11))
+                            Text(tab.label)
+                                .font(.system(size: 12, weight: activeTab == tab ? .semibold : .regular))
+                        }
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 6)
+                        .background(activeTab == tab ? Color(nsColor: .controlBackgroundColor) : Color.clear)
+                        .foregroundStyle(activeTab == tab ? Color.primary : Color.secondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                        .shadow(color: activeTab == tab ? .black.opacity(0.08) : .clear, radius: 2, x: 0, y: 1)
+                    }
+                    .buttonStyle(.plain)
+                    .animation(.easeInOut(duration: 0.12), value: activeTab)
+                }
+            }
+            .padding(3)
+            .background(Color.primary.opacity(0.07))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            Spacer()
+
+            // Veraltete DB
+            if databaseOutdated {
+                Button { showSettings = true } label: {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 15))
+                        .foregroundStyle(Color.orange)
+                }
+                .buttonStyle(.plain)
+                .help(String(localized: "db.outdated_hint"))
+            }
+
+            // Titel vorschlagen
+            Button { vm.suggestRandom() } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "shuffle")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(String(localized: "action.suggest_now"))
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(
+                    vm.hasDatabase && vm.filteredCount > 0
+                        ? Color.accentColor
+                        : Color.secondary.opacity(0.1)
+                )
+                .foregroundStyle(
+                    vm.hasDatabase && vm.filteredCount > 0 ? Color.white : Color.secondary
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+            .disabled(!vm.hasDatabase || vm.filteredCount == 0)
+            .keyboardShortcut("r", modifiers: .command)
+
+            // Filter-Button mit Badge
+            Button { showFilter.toggle() } label: {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                        .font(.system(size: 18))
+                        .foregroundStyle(activeFilterCount > 0 ? Color.accentColor : Color.secondary)
+
+                    if activeFilterCount > 0 {
+                        Text("\(activeFilterCount)")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 13, height: 13)
+                            .background(Color.accentColor)
+                            .clipShape(Circle())
+                            .offset(x: 5, y: -4)
+                    }
+                }
+                .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showFilter, arrowEdge: .bottom) {
+                FilterPopoverContent(vm: vm)
+            }
+
+            // Einstellungen
+            Button { showSettings = true } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Color.secondary)
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(",", modifiers: .command)
+        }
+        .padding(.leading, 84)
+        .padding(.trailing, 14)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
+    }
+
+    // MARK: - Content
 
     @ViewBuilder
     private var contentArea: some View {
@@ -128,7 +244,6 @@ struct WelcomeView: View {
 
     var body: some View {
         VStack(spacing: 32) {
-            // Icon
             ZStack {
                 Circle()
                     .fill(Color.accentColor.opacity(0.08))
@@ -146,7 +261,6 @@ struct WelcomeView: View {
                     .font(.title).fontWeight(.bold)
 
                 if vm.filteredCount > 0 {
-                    // Prominente Filmanzahl
                     HStack(spacing: 6) {
                         Text("\(vm.filteredCount)")
                             .font(.system(size: 28, weight: .heavy, design: .rounded))
@@ -171,7 +285,6 @@ struct WelcomeView: View {
                 }
             }
 
-            // Hinweis auf Tastaturkürzel
             HStack(spacing: 4) {
                 Image(systemName: "keyboard")
                     .font(.system(size: 11))
@@ -194,7 +307,7 @@ struct WelcomeView: View {
 struct SuggestedMovieView: View {
     @ObservedObject var vm: MovieViewModel
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 14), count: 3)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 14), count: 4)
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -238,7 +351,7 @@ struct SuggestedMovieView: View {
     }
 }
 
-// MARK: - Window configurator (transparente Titelleiste + Ampel-Buttons)
+// MARK: - Window configurator
 
 private struct WindowConfigurator: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
