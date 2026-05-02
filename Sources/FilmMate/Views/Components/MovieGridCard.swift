@@ -53,7 +53,7 @@ struct MovieGridCard: View {
             resolvedRuntime = movie.runtimeFormatted
         }
         .task(id: movie.id) {
-            if movie.mediaType == .movie, movie.runtime == nil {
+            if movie.mediaType == .movie, (movie.runtime ?? 0) <= 0 {
                 await fetchRuntimeIfNeeded()
             }
         }
@@ -140,19 +140,21 @@ struct MovieGridCard: View {
                 Spacer()
 
                 // Laufzeit / Staffeln
-                HStack(spacing: 3) {
+                Group {
                     if isLoadingRuntime {
                         ProgressView()
                             .scaleEffect(0.5)
                             .frame(width: 12, height: 12)
                             .tint(.white.opacity(0.7))
                     } else if let info = displayRuntime {
-                        Image(systemName: movie.mediaType == .series ? "tv" : "clock")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.white.opacity(0.8))
-                        Text(info)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.9))
+                        HStack(spacing: 3) {
+                            Image(systemName: movie.mediaType == .series ? "tv" : "clock")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.white.opacity(0.8))
+                            Text(info)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.9))
+                        }
                     }
                 }
             }
@@ -190,29 +192,26 @@ struct MovieGridCard: View {
 
             // Laufzeit/Staffeln + Genre-Emojis
             HStack(spacing: 6) {
-                HStack(spacing: 3) {
-                    if isLoadingRuntime {
-                        ProgressView()
-                            .scaleEffect(0.5)
-                            .frame(width: 10, height: 10)
-                    } else {
+                if isLoadingRuntime {
+                    ProgressView()
+                        .scaleEffect(0.5)
+                        .frame(width: 10, height: 10)
+                    Text("·")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary.opacity(0.4))
+                } else if let info = displayRuntime {
+                    HStack(spacing: 3) {
                         Image(systemName: movie.mediaType == .series ? "tv" : "clock")
                             .font(.system(size: 9))
                             .foregroundStyle(.secondary)
-                        if let info = displayRuntime {
-                            Text(info)
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                        } else {
-                            Text("−")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary.opacity(0.4))
-                        }
+                        Text(info)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
                     }
+                    Text("·")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary.opacity(0.4))
                 }
-                Text("·")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary.opacity(0.4))
                 HStack(spacing: 3) {
                     ForEach(movie.genres.prefix(3)) { genre in
                         Text(genre.emoji)
