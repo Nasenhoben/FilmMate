@@ -1,20 +1,14 @@
 /* Genres */
 "genre.action" = "Action";
-"genre.adventure" = "Abenteuer";
 "genre.animation" = "Animation";
 "genre.comedy" = "Komödie";
 "genre.crime" = "Krimi";
-"genre.documentary" = "Dokumentation";
 "genre.drama" = "Drama";
-"genre.family" = "Familie";
 "genre.fantasy" = "Fantasy";
 "genre.horror" = "Horror";
 "genre.romance" = "Romantik";
 "genre.scifi" = "Sci-Fi";
 "genre.thriller" = "Thriller";
-"genre.mystery" = "Mystery";
-"genre.action_adventure" = "Action & Abenteuer";
-"genre.scifi_fantasy" = "Sci-Fi & Fantasy";
 
 /* Filter */
 "filter.providers" = "Streaminganbieter";
