@@ -10,7 +10,7 @@ struct FilterSidebarView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Platzhalter für die Ampel-Buttons der Titelleiste
-            Color.clear.frame(height: 14)
+            Color.clear.frame(height: 22)
 
             VStack(spacing: 0) {
                 contentTypeSection
@@ -24,6 +24,7 @@ struct FilterSidebarView: View {
             bottomBar
         }
         .frame(width: 240)
+        .ignoresSafeArea(edges: .top)
         .background(Color(nsColor: .controlBackgroundColor))
     }
 
