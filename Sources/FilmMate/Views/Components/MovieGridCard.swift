@@ -9,6 +9,16 @@ struct MovieGridCard: View {
     @State private var showDetail = false
     @State private var resolvedRuntime: String? = nil
 
+    private var displayRuntime: String? {
+        if movie.mediaType == .series {
+            if let seasons = movie.numberOfSeasons {
+                return "\(seasons) \(String(localized: "detail.seasons"))"
+            }
+            return nil
+        }
+        return resolvedRuntime
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             providerBanner
@@ -27,7 +37,9 @@ struct MovieGridCard: View {
             resolvedRuntime = movie.runtimeFormatted
         }
         .task(id: movie.id) {
-            if movie.runtime == nil { await fetchRuntimeIfNeeded() }
+            if movie.mediaType == .movie, movie.runtime == nil {
+                await fetchRuntimeIfNeeded()
+            }
         }
         .onHover { hovered = $0 }
         .animation(.spring(duration: 0.2, bounce: 0.1), value: hovered)
@@ -74,7 +86,7 @@ struct MovieGridCard: View {
                 Rectangle()
                     .fill(Color.secondary.opacity(0.15))
                     .overlay {
-                        Image(systemName: "film")
+                        Image(systemName: movie.mediaType == .series ? "tv" : "film")
                             .font(.title2)
                             .foregroundStyle(.secondary.opacity(0.4))
                     }
@@ -103,13 +115,13 @@ struct MovieGridCard: View {
 
                 Spacer()
 
-                // Laufzeit
-                if let runtime = resolvedRuntime {
+                // Laufzeit / Staffeln
+                if let info = displayRuntime {
                     HStack(spacing: 3) {
-                        Image(systemName: "clock")
+                        Image(systemName: movie.mediaType == .series ? "tv" : "clock")
                             .font(.system(size: 9))
                             .foregroundStyle(.white.opacity(0.8))
-                        Text(runtime)
+                        Text(info)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.white.opacity(0.9))
                     }
@@ -147,14 +159,14 @@ struct MovieGridCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            // Laufzeit + Genre-Emojis
+            // Laufzeit/Staffeln + Genre-Emojis
             HStack(spacing: 6) {
-                if let runtime = resolvedRuntime {
+                if let info = displayRuntime {
                     HStack(spacing: 3) {
-                        Image(systemName: "clock")
+                        Image(systemName: movie.mediaType == .series ? "tv" : "clock")
                             .font(.system(size: 9))
                             .foregroundStyle(.secondary)
-                        Text(runtime)
+                        Text(info)
                             .font(.system(size: 10))
                             .foregroundStyle(.secondary)
                     }

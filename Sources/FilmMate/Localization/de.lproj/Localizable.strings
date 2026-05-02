@@ -12,30 +12,39 @@
 "genre.romance" = "Romantik";
 "genre.scifi" = "Sci-Fi";
 "genre.thriller" = "Thriller";
+"genre.mystery" = "Mystery";
+"genre.action_adventure" = "Action & Abenteuer";
+"genre.scifi_fantasy" = "Sci-Fi & Fantasy";
 
 /* Filter */
 "filter.providers" = "Streaminganbieter";
 "filter.genres" = "Genres";
 "filter.clear" = "Filter zurücksetzen";
+"filter.content_type" = "INHALT";
+
+/* Inhaltstyp */
+"content.all" = "Alle";
+"content.movies" = "Filme";
+"content.series" = "Serien";
 
 /* Actions */
-"action.suggest" = "5 Filme vorschlagen";
-"suggestion.title" = "Deine Filmvorschläge";
-"suggestion.subtitle" = "%d Filme ausgewählt";
-"action.suggest_now" = "Film vorschlagen";
-"action.another" = "Anderen Film";
+"action.suggest" = "5 Titel vorschlagen";
+"suggestion.title" = "Deine Vorschläge";
+"suggestion.subtitle" = "%d Titel ausgewählt";
+"action.suggest_now" = "Titel vorschlagen";
+"action.another" = "Anderen Titel";
 "action.settings" = "Einstellungen";
 "action.setup" = "Einrichten";
 
 /* Welcome */
-"welcome.title" = "Welchen Film heute?";
-"welcome.subtitle" = "Wähle Genres und Anbieter aus, um einen Film vorzuschlagen.";
-"welcome.count" = "%d Filme verfügbar";
-"welcome.count_suffix" = "Filme verfügbar";
+"welcome.title" = "Was schauen wir heute?";
+"welcome.subtitle" = "Wähle Genres und Anbieter aus, um einen Titel vorzuschlagen.";
+"welcome.count" = "%d Titel verfügbar";
+"welcome.count_suffix" = "Titel verfügbar";
 
 /* Empty state */
 "empty.title" = "Keine Datenbank";
-"empty.subtitle" = "Gib deinen TMDB API-Key ein und lade die Filmdatenbank herunter.";
+"empty.subtitle" = "Gib deinen TMDB API-Key ein und lade die Datenbank herunter.";
 
 /* Settings */
 "settings.api_key" = "API-Key";
@@ -53,12 +62,13 @@
 "settings.database.never" = "Noch nie";
 "settings.database.update" = "Datenbank aktualisieren";
 "settings.database.updated" = "Aktualisiert";
-"settings.database.movies" = "Filme";
+"settings.database.movies" = "Einträge";
 "settings.section.appearance" = "Darstellung";
 "settings.section.database" = "Datenbank";
 
 /* Progress */
 "progress.fetching_movies" = "Filme werden geladen…";
+"progress.fetching_series" = "Serien werden geladen…";
 "progress.checking_providers" = "Streaminganbieter werden geprüft…";
 "progress.done" = "Datenbank aktualisiert";
 
@@ -72,7 +82,7 @@
 "watchlist.title" = "WATCHLIST";
 "watchlist.add" = "Zur Watchlist";
 "watchlist.remove" = "Von Watchlist entfernen";
-"watchlist.empty" = "Noch keine Filme";
+"watchlist.empty" = "Noch keine Einträge";
 "watchlist.more" = "+%d weitere";
 "watchlist.remove_all" = "Alle entfernen";
 
@@ -93,14 +103,18 @@
 "runtime.medium" = "Mittel";
 "runtime.long" = "Lang";
 
-/* Film-Details */
+/* Film-/Serien-Details */
 "detail.overview" = "Inhaltsangabe";
 "detail.cast" = "Besetzung";
 "detail.open_tmdb" = "Auf TMDB öffnen";
+"detail.seasons" = "Staffeln";
+"detail.episodes" = "Episoden";
+"detail.episode_runtime" = "ca. %dmin / Episode";
+"detail.created_by" = "Erstellt von";
 
 /* Fortschritt */
 "progress.fetching_runtimes" = "Laufzeiten werden geladen…";
 
 /* Extra */
-"welcome.no_results" = "Keine Filme für diese Kombination. Filter anpassen.";
+"welcome.no_results" = "Keine Ergebnisse für diese Kombination. Filter anpassen.";
 "settings.database.updating" = "Wird aktualisiert…";

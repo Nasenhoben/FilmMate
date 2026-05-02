@@ -151,6 +151,171 @@ actor TMDBService {
         return try JSONDecoder().decode(TMDBMovieResponse.self, from: data).results
     }
 
+    // MARK: - Series fetch
+
+    func fetchSeriesWithProviders(
+        progressCallback: @escaping @Sendable (Double, String) -> Void
+    ) async throws -> [Movie] {
+        guard !apiKey.isEmpty else { throw TMDBError.missingAPIKey }
+
+        await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_series")) }
+
+        let providers = StreamingProvider.allCases
+        let seriesPagesRating = 30
+        let seriesPagesDate   = 5
+        let totalUnits = Double(providers.count * (seriesPagesRating + seriesPagesDate))
+        let counter = ProgressCounter(total: totalUnits, callback: progressCallback)
+
+        var seriesMap: [Int: Movie] = [:]
+
+        func merge(_ results: [(TMDBTVShow, StreamingProvider)]) {
+            for (show, provider) in results {
+                if var existing = seriesMap[show.id] {
+                    if !existing.availableOn.contains(provider) {
+                        existing.availableOn.append(provider)
+                    }
+                    seriesMap[show.id] = existing
+                } else {
+                    seriesMap[show.id] = show.toMovie(providers: [provider])
+                }
+            }
+        }
+
+        try await withThrowingTaskGroup(of: [(TMDBTVShow, StreamingProvider)].self) { group in
+            for provider in providers {
+                group.addTask {
+                    try await self.fetchAllTVPages(for: provider, sortBy: "vote_average.desc",
+                                                   pages: seriesPagesRating, counter: counter)
+                }
+                group.addTask {
+                    try await self.fetchAllTVPages(for: provider, sortBy: "first_air_date.desc",
+                                                   pages: seriesPagesDate, counter: counter)
+                }
+            }
+            for try await results in group { merge(results) }
+        }
+
+        let sorted = Array(seriesMap.values).sorted { $0.voteAverage > $1.voteAverage }
+
+        // Fetch episode runtimes for top 200 series
+        let top200Ids = Array(sorted.prefix(200).map(\.id))
+        await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
+        let runtimes = await fetchEpisodeRuntimes(for: top200Ids)
+
+        let series = sorted.map { s -> Movie in
+            var m = s
+            m.episodeRuntime = runtimes[s.id]
+            return m
+        }
+
+        await MainActor.run { progressCallback(1.0, String(localized: "progress.done")) }
+        return series
+    }
+
+    private func fetchAllTVPages(
+        for provider: StreamingProvider,
+        sortBy: String,
+        pages: Int,
+        counter: ProgressCounter
+    ) async throws -> [(TMDBTVShow, StreamingProvider)] {
+        var results: [(TMDBTVShow, StreamingProvider)] = []
+        let batches = stride(from: 1, through: pages, by: maxConcurrentRequests)
+
+        for batchStart in batches {
+            let batchEnd = min(batchStart + maxConcurrentRequests - 1, pages)
+            try await withThrowingTaskGroup(of: [TMDBTVShow].self) { group in
+                for page in batchStart...batchEnd {
+                    group.addTask {
+                        try await self.discoverTVPage(provider: provider, sortBy: sortBy, page: page)
+                    }
+                }
+                for try await shows in group {
+                    for show in shows { results.append((show, provider)) }
+                    await counter.increment(by: 1)
+                }
+            }
+            try await Task.sleep(nanoseconds: 150_000_000)
+        }
+        return results
+    }
+
+    private func discoverTVPage(provider: StreamingProvider, sortBy: String, page: Int) async throws -> [TMDBTVShow] {
+        var components = URLComponents(string: "\(baseURL)/discover/tv")!
+        components.queryItems = [
+            URLQueryItem(name: "api_key",              value: apiKey),
+            URLQueryItem(name: "language",             value: language),
+            URLQueryItem(name: "sort_by",              value: sortBy),
+            URLQueryItem(name: "vote_count.gte",       value: "\(minimumVotes)"),
+            URLQueryItem(name: "with_watch_providers", value: "\(provider.rawValue)"),
+            URLQueryItem(name: "watch_region",         value: "DE"),
+            URLQueryItem(name: "page",                 value: "\(page)")
+        ]
+
+        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw TMDBError.invalidResponse
+        }
+        return try JSONDecoder().decode(TMDBTVResponse.self, from: data).results
+    }
+
+    // MARK: - Series details
+
+    func fetchSeriesDetails(seriesId: Int) async throws -> TMDBSeriesDetailResponse {
+        guard !apiKey.isEmpty else { throw TMDBError.missingAPIKey }
+        var components = URLComponents(string: "\(baseURL)/tv/\(seriesId)")!
+        components.queryItems = [
+            URLQueryItem(name: "api_key",            value: apiKey),
+            URLQueryItem(name: "language",           value: language),
+            URLQueryItem(name: "append_to_response", value: "credits")
+        ]
+        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw TMDBError.invalidResponse
+        }
+        return try JSONDecoder().decode(TMDBSeriesDetailResponse.self, from: data)
+    }
+
+    private func fetchEpisodeRuntimes(for seriesIds: [Int]) async -> [Int: Int] {
+        var runtimeMap: [Int: Int] = [:]
+        let batches = stride(from: 0, to: seriesIds.count, by: maxConcurrentRequests)
+        let key = apiKey
+        let lang = language
+        let base = baseURL
+
+        for batchStart in batches {
+            let batchEnd = min(batchStart + maxConcurrentRequests, seriesIds.count)
+            let batch = Array(seriesIds[batchStart..<batchEnd])
+
+            await withTaskGroup(of: (Int, Int?).self) { group in
+                for id in batch {
+                    group.addTask {
+                        struct R: Codable {
+                            let episodeRunTime: [Int]?
+                            enum CodingKeys: String, CodingKey { case episodeRunTime = "episode_run_time" }
+                        }
+                        var components = URLComponents(string: "\(base)/tv/\(id)")!
+                        components.queryItems = [
+                            URLQueryItem(name: "api_key", value: key),
+                            URLQueryItem(name: "language", value: lang)
+                        ]
+                        let runtime: Int? = try? await {
+                            let (data, _) = try await URLSession.shared.data(from: components.url!)
+                            let decoded = try JSONDecoder().decode(R.self, from: data)
+                            guard let times = decoded.episodeRunTime, !times.isEmpty else { return nil }
+                            return times.reduce(0, +) / times.count
+                        }()
+                        return (id, runtime)
+                    }
+                }
+                for await (id, runtime) in group {
+                    if let runtime { runtimeMap[id] = runtime }
+                }
+            }
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+        return runtimeMap
+    }
+
     // MARK: - Film-Details (Besetzung, Regisseur, Laufzeit)
 
     func fetchMovieDetails(movieId: Int) async throws -> TMDBMovieDetailResponse {

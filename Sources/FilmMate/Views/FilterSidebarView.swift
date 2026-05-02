@@ -13,6 +13,8 @@ struct FilterSidebarView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
+                    contentTypeSection
+                    Divider().padding(.horizontal, 12)
                     providerSection
                     Divider().padding(.horizontal, 12)
                     ratingSection
@@ -29,6 +31,43 @@ struct FilterSidebarView: View {
         }
         .frame(width: 240)
         .background(Color(nsColor: .controlBackgroundColor))
+    }
+
+    // MARK: – Inhaltstyp (Film / Alle / Serie)
+
+    private var contentTypeSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionHeader("filter.content_type")
+
+            HStack(spacing: 4) {
+                ForEach(MediaTypeFilter.allCases) { filter in
+                    let isSelected = vm.mediaTypeFilter == filter
+                    Button {
+                        vm.mediaTypeFilter = filter
+                        vm.suggestedMovies = []
+                    } label: {
+                        Text(filter.label)
+                            .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                            .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
+                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .animation(.easeInOut(duration: 0.12), value: isSelected)
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
     }
 
     // MARK: – Streaming Providers
@@ -211,7 +250,7 @@ struct FilterSidebarView: View {
 
             // Clear-Link wenn aktive Filter
             if !vm.selectedGenres.isEmpty || !vm.selectedProviders.isEmpty
-                || vm.minimumRating > 0 || vm.runtimeFilter != .all {
+                || vm.minimumRating > 0 || vm.runtimeFilter != .all || vm.mediaTypeFilter != .all {
                 Button { vm.clearFilters() } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "xmark.circle")
@@ -386,20 +425,45 @@ struct WatchlistRowItem: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: "bookmark.fill")
-                .font(.system(size: 9))
-                .foregroundStyle(Color.accentColor.opacity(0.7))
+            // Farbbalken der Anbieter links
+            if !movie.availableOn.isEmpty {
+                VStack(spacing: 2) {
+                    ForEach(movie.availableOn) { provider in
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(provider.color)
+                            .frame(width: 3, height: 10)
+                    }
+                }
+            } else {
+                Image(systemName: "bookmark.fill")
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color.accentColor.opacity(0.7))
+            }
 
+            // Titel + Anbieter-Namen
             Button {
-                if let url = URL(string: "https://www.themoviedb.org/movie/\(movie.id)") {
+                let path = movie.mediaType == .series ? "tv" : "movie"
+                if let url = URL(string: "https://www.themoviedb.org/\(path)/\(movie.id)") {
                     NSWorkspace.shared.open(url)
                 }
             } label: {
-                Text(movie.title)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color.primary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(movie.title)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color.primary)
+                        .lineLimit(1)
+
+                    if !movie.availableOn.isEmpty {
+                        HStack(spacing: 3) {
+                            ForEach(movie.availableOn) { provider in
+                                Text(provider.name)
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundStyle(provider.color)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
 
@@ -416,7 +480,7 @@ struct WatchlistRowItem: View {
             }
         }
         .padding(.horizontal, 6)
-        .padding(.vertical, 4)
+        .padding(.vertical, 5)
         .background(hovered ? Color.primary.opacity(0.05) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: 5))
         .contentShape(Rectangle())

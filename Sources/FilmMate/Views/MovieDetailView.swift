@@ -3,12 +3,13 @@ import AppKit
 
 struct MovieDetailView: View {
     let movie: Movie
-    @State private var details: TMDBMovieDetailResponse?
+    @State private var movieDetails: TMDBMovieDetailResponse?
+    @State private var seriesDetails: TMDBSeriesDetailResponse?
     @State private var isLoading = true
     @ObservedObject private var watchlist = WatchlistService.shared
     @Environment(\.dismiss) private var dismiss
 
-    private var effectiveRuntime: Int? { details?.runtime ?? movie.runtime }
+    private var effectiveRuntime: Int? { movieDetails?.runtime ?? movie.runtime }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -31,7 +32,11 @@ struct MovieDetailView: View {
         }
         .frame(width: 640, height: 580)
         .task {
-            details = try? await TMDBService.shared.fetchMovieDetails(movieId: movie.id)
+            if movie.mediaType == .series {
+                seriesDetails = try? await TMDBService.shared.fetchSeriesDetails(seriesId: movie.id)
+            } else {
+                movieDetails = try? await TMDBService.shared.fetchMovieDetails(movieId: movie.id)
+            }
             isLoading = false
         }
     }
@@ -67,7 +72,10 @@ struct MovieDetailView: View {
             } placeholder: {
                 Rectangle()
                     .fill(Color.secondary.opacity(0.15))
-                    .overlay { Image(systemName: "film").font(.title).foregroundStyle(.secondary.opacity(0.4)) }
+                    .overlay {
+                        Image(systemName: movie.mediaType == .series ? "tv" : "film")
+                            .font(.title).foregroundStyle(.secondary.opacity(0.4))
+                    }
             }
             .frame(width: 130, height: 195)
             .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -84,24 +92,57 @@ struct MovieDetailView: View {
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
 
-                // Bewertung + Laufzeit
+                // Bewertung + Laufzeit / Staffeln
                 HStack(spacing: 12) {
                     Label(movie.ratingFormatted, systemImage: "star.fill")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.yellow)
 
-                    if let rt = effectiveRuntime.flatMap({ Movie.formatRuntime($0) }) {
-                        Label(rt, systemImage: "clock")
+                    if movie.mediaType == .series {
+                        let seasons = seriesDetails?.numberOfSeasons ?? movie.numberOfSeasons
+                        let episodes = seriesDetails?.numberOfEpisodes
+                        if let s = seasons {
+                            Label("\(s) \(String(localized: "detail.seasons"))", systemImage: "tv")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        if let e = episodes {
+                            Label("\(e) \(String(localized: "detail.episodes"))", systemImage: "list.number")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        if let rt = effectiveRuntime.flatMap({ Movie.formatRuntime($0) }) {
+                            Label(rt, systemImage: "clock")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                // Episodenlaufzeit (nur Serien)
+                if movie.mediaType == .series {
+                    let epRuntime = seriesDetails?.averageEpisodeRuntime ?? movie.episodeRuntime
+                    if let ep = epRuntime {
+                        Label(String(format: String(localized: "detail.episode_runtime"), ep), systemImage: "clock")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                 }
 
-                // Regisseur
-                if let director = details?.director {
-                    Label(director, systemImage: "video.fill")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                // Regisseur / Erstellt von
+                if movie.mediaType == .series {
+                    if let creators = seriesDetails?.creatorNames {
+                        Label(creators, systemImage: "person.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    if let director = movieDetails?.director {
+                        Label(director, systemImage: "video.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 // Genres
@@ -176,7 +217,10 @@ struct MovieDetailView: View {
 
     @ViewBuilder
     private var castSection: some View {
-        if let cast = details?.topCast, !cast.isEmpty {
+        let cast = movie.mediaType == .series
+            ? seriesDetails?.topCast
+            : movieDetails?.topCast
+        if let cast, !cast.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 sectionLabel("detail.cast")
                 HStack(spacing: 12) {
@@ -208,7 +252,8 @@ struct MovieDetailView: View {
 
     private var tmdbButton: some View {
         Button {
-            if let url = URL(string: "https://www.themoviedb.org/movie/\(movie.id)") {
+            let path = movie.mediaType == .series ? "tv" : "movie"
+            if let url = URL(string: "https://www.themoviedb.org/\(path)/\(movie.id)") {
                 NSWorkspace.shared.open(url)
             }
         } label: {
@@ -233,16 +278,5 @@ struct MovieDetailView: View {
             .font(.system(size: 9, weight: .heavy))
             .foregroundStyle(.secondary)
             .kerning(0.8)
-    }
-}
-
-// MARK: – Laufzeit formatieren (statisch, für Detail-View nutzbar)
-
-extension Movie {
-    static func formatRuntime(_ minutes: Int) -> String {
-        let h = minutes / 60, m = minutes % 60
-        if h > 0 && m > 0 { return "\(h)h \(m)min" }
-        if h > 0 { return "\(h)h" }
-        return "\(m)min"
     }
 }

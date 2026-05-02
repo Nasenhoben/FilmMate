@@ -40,3 +40,40 @@ struct TMDBMovieDetailResponse: Codable {
         Array(credits?.cast.prefix(5) ?? [])
     }
 }
+
+struct TMDBSeriesDetailResponse: Codable {
+    let id: Int
+    let numberOfSeasons: Int?
+    let numberOfEpisodes: Int?
+    let episodeRunTime: [Int]?
+    let createdBy: [Creator]?
+    let credits: TMDBMovieDetailResponse.Credits?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case numberOfSeasons = "number_of_seasons"
+        case numberOfEpisodes = "number_of_episodes"
+        case episodeRunTime = "episode_run_time"
+        case createdBy = "created_by"
+        case credits
+    }
+
+    struct Creator: Codable, Identifiable {
+        let id: Int
+        let name: String
+    }
+
+    var averageEpisodeRuntime: Int? {
+        guard let runtimes = episodeRunTime, !runtimes.isEmpty else { return nil }
+        return runtimes.reduce(0, +) / runtimes.count
+    }
+
+    var creatorNames: String? {
+        guard let creators = createdBy, !creators.isEmpty else { return nil }
+        return creators.map(\.name).joined(separator: ", ")
+    }
+
+    var topCast: [TMDBMovieDetailResponse.CastMember] {
+        Array(credits?.cast.prefix(5) ?? [])
+    }
+}

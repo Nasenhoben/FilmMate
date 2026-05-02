@@ -39,7 +39,8 @@ final class DatabaseService: ObservableObject {
             let data = try JSONEncoder().encode(movies)
             try data.write(to: storageURL, options: .atomicWrite)
 
-            let meta = DatabaseMeta(lastUpdated: Date(), movieCount: movies.count)
+            let seriesCount = movies.filter { $0.mediaType == .series }.count
+            let meta = DatabaseMeta(lastUpdated: Date(), movieCount: movies.count, seriesCount: seriesCount)
             let metaData = try JSONEncoder().encode(meta)
             try metaData.write(to: metaURL, options: .atomicWrite)
         } catch {
@@ -72,14 +73,21 @@ final class DatabaseService: ObservableObject {
         genres: Set<Genre>,
         providers: Set<StreamingProvider>,
         minimumRating: Double = 0.0,
-        runtimeFilter: RuntimeFilter = .all
+        runtimeFilter: RuntimeFilter = .all,
+        mediaTypeFilter: MediaTypeFilter = .all
     ) -> [Movie] {
         movies.filter { movie in
             let genreMatch    = genres.isEmpty || !Set(movie.genreIds).isDisjoint(with: Set(genres.map(\.rawValue)))
             let providerMatch = providers.isEmpty || !Set(movie.availableOn).isDisjoint(with: providers)
             let ratingMatch   = movie.voteAverage >= minimumRating
             let runtimeMatch  = runtimeFilter.matches(movie.runtime)
-            return genreMatch && providerMatch && ratingMatch && runtimeMatch
+            let mediaMatch: Bool
+            switch mediaTypeFilter {
+            case .all:    mediaMatch = true
+            case .movies: mediaMatch = movie.mediaType == .movie
+            case .series: mediaMatch = movie.mediaType == .series
+            }
+            return genreMatch && providerMatch && ratingMatch && runtimeMatch && mediaMatch
         }
     }
 
@@ -107,4 +115,5 @@ final class DatabaseService: ObservableObject {
 private struct DatabaseMeta: Codable {
     let lastUpdated: Date
     let movieCount: Int
+    var seriesCount: Int = 0
 }
