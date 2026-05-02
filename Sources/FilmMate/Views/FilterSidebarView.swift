@@ -441,16 +441,14 @@ struct WatchlistRowItem: View {
 
                 // Anbieter-Kürzel rechts neben dem Titel (z. B. "N/A")
                 if !movie.availableOn.isEmpty {
-                    HStack(spacing: 1) {
-                        ForEach(Array(movie.availableOn.enumerated()), id: \.element.id) { index, provider in
-                            if index > 0 {
-                                Text("/")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(Color.secondary.opacity(0.5))
-                            }
+                    HStack(spacing: 2) {
+                        ForEach(movie.availableOn) { provider in
                             Text(provider.initial)
-                                .font(.system(size: 10, weight: .black))
-                                .foregroundStyle(provider.color)
+                                .font(.system(size: 9, weight: .black))
+                                .foregroundStyle(.white)
+                                .frame(width: 15, height: 15)
+                                .background(provider.color)
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
                                 .help(provider.name)
                         }
                     }
