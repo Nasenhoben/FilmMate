@@ -35,25 +35,21 @@ struct MainView: View {
             FilterSidebarView(
                 vm: vm,
                 onSettings: { showSettings = true },
-                onShowWatchlist: { withAnimation(.easeInOut(duration: 0.18)) { activeTab = .watchlist } }
+                activeTab: $activeTab
             )
 
             Divider()
 
-            VStack(spacing: 0) {
-                tabBar
-                Divider()
-                ZStack {
-                    Color(nsColor: .windowBackgroundColor).ignoresSafeArea()
-                    if activeTab == .discover {
-                        contentArea.transition(.opacity)
-                    } else {
-                        WatchlistOverviewView().transition(.opacity)
-                    }
+            ZStack {
+                Color(nsColor: .windowBackgroundColor).ignoresSafeArea()
+                if activeTab == .discover {
+                    contentArea.transition(.opacity)
+                } else {
+                    WatchlistOverviewView().transition(.opacity)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .animation(.easeInOut(duration: 0.18), value: activeTab)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(.easeInOut(duration: 0.18), value: activeTab)
         }
         .frame(minWidth: 870, minHeight: 520)
         .sheet(isPresented: $showSettings) {
@@ -61,54 +57,6 @@ struct MainView: View {
         }
         .preferredColorScheme(settings.colorScheme)
         .background(WindowConfigurator())
-    }
-
-    // MARK: - Tab bar
-
-    private var tabBar: some View {
-        HStack(spacing: 4) {
-            ForEach(AppTab.allCases, id: \.self) { tab in
-                tabButton(tab)
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-    }
-
-    @ViewBuilder
-    private func tabButton(_ tab: AppTab) -> some View {
-        let isSelected = activeTab == tab
-        Button {
-            withAnimation(.easeInOut(duration: 0.18)) { activeTab = tab }
-        } label: {
-            HStack(spacing: 5) {
-                Image(systemName: tab.icon)
-                    .font(.system(size: 11))
-                Text(tab.label)
-                    .font(.system(size: 12, weight: isSelected ? .semibold : .medium))
-                if tab == .watchlist, !watchlist.movies.isEmpty {
-                    Text("\(watchlist.movies.count)")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(Color.accentColor)
-                        .clipShape(Capsule())
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(isSelected ? Color.accentColor.opacity(0.12) : Color.primary.opacity(0.05))
-            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 7))
-            .overlay(
-                RoundedRectangle(cornerRadius: 7)
-                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.4) : Color.clear, lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.12), value: isSelected)
     }
 
     // MARK: - Discover content

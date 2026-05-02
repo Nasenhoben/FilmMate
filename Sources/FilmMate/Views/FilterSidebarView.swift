@@ -5,7 +5,7 @@ struct FilterSidebarView: View {
     @ObservedObject var vm: MovieViewModel
     @ObservedObject private var watchlist = WatchlistService.shared
     let onSettings: () -> Void
-    let onShowWatchlist: () -> Void
+    @Binding var activeTab: AppTab
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,9 +41,11 @@ struct FilterSidebarView: View {
             sectionHeader("filter.content_type")
 
             HStack(spacing: 4) {
+                // Alle / Filme / Serien
                 ForEach(MediaTypeFilter.allCases) { filter in
-                    let isSelected = vm.mediaTypeFilter == filter
+                    let isSelected = activeTab == .discover && vm.mediaTypeFilter == filter
                     Button {
+                        withAnimation(.easeInOut(duration: 0.18)) { activeTab = .discover }
                         vm.mediaTypeFilter = filter
                         vm.suggestedMovies = []
                     } label: {
@@ -64,6 +66,38 @@ struct FilterSidebarView: View {
                     .buttonStyle(.plain)
                     .animation(.easeInOut(duration: 0.12), value: isSelected)
                 }
+
+                // Watchlist-Button
+                let isWatchlist = activeTab == .watchlist
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) { activeTab = .watchlist }
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: isWatchlist ? "bookmark.fill" : "bookmark")
+                            .font(.system(size: 12, weight: .semibold))
+                            .frame(width: 30, height: 26)
+                            .background(isWatchlist ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
+                            .foregroundStyle(isWatchlist ? Color.accentColor : Color.secondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(isWatchlist ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                            )
+                        if !watchlist.movies.isEmpty {
+                            Text("\(watchlist.movies.count)")
+                                .font(.system(size: 7, weight: .black))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 3)
+                                .padding(.vertical, 1.5)
+                                .background(Color.accentColor)
+                                .clipShape(Capsule())
+                                .offset(x: 4, y: -4)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .animation(.easeInOut(duration: 0.12), value: isWatchlist)
+                .help(String(localized: "tab.watchlist"))
             }
         }
         .padding(.horizontal, 10)
@@ -174,7 +208,9 @@ struct FilterSidebarView: View {
                 Spacer()
                 if !watchlist.movies.isEmpty {
                     HStack(spacing: 6) {
-                        Button { onShowWatchlist() } label: {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.18)) { activeTab = .watchlist }
+                        } label: {
                             HStack(spacing: 2) {
                                 Text("\(watchlist.movies.count)")
                                     .font(.system(size: 9, weight: .semibold))
@@ -223,7 +259,9 @@ struct FilterSidebarView: View {
                 }
 
                 if watchlist.movies.count > 3 {
-                    Button { onShowWatchlist() } label: {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.18)) { activeTab = .watchlist }
+                    } label: {
                         Text(String(format: String(localized: "watchlist.more"), watchlist.movies.count - 3))
                             .font(.system(size: 11))
                             .foregroundStyle(Color.accentColor.opacity(0.8))
