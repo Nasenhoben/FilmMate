@@ -10,7 +10,7 @@ struct FilterSidebarView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Platzhalter für die Ampel-Buttons der Titelleiste
-            Color.clear.frame(height: 8)
+            Color.clear.frame(height: 28)
 
             VStack(spacing: 0) {
                 contentTypeSection
@@ -84,7 +84,7 @@ struct FilterSidebarView: View {
             }
         }
         .padding(.horizontal, 10)
-        .padding(.top, 8)
+        .padding(.top, 4)
         .padding(.bottom, 6)
     }
 
@@ -510,16 +510,17 @@ struct GenreToggleTile: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 1) {
+            HStack(spacing: 3) {
                 Text(genre.emoji)
-                    .font(.system(size: 13))
+                    .font(.system(size: 10))
                 Text(genre.localizedName)
                     .font(.system(size: 9, weight: isSelected ? .bold : .medium))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.6)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 4)
             .background(
                 isSelected
                     ? genre.color.opacity(0.22)
