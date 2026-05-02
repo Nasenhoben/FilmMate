@@ -424,66 +424,51 @@ struct WatchlistRowItem: View {
     @State private var hovered = false
 
     var body: some View {
-        HStack(spacing: 6) {
-            // Farbbalken der Anbieter links
-            if !movie.availableOn.isEmpty {
-                VStack(spacing: 2) {
-                    ForEach(movie.availableOn) { provider in
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(provider.color)
-                            .frame(width: 3, height: 10)
-                    }
-                }
-            } else {
-                Image(systemName: "bookmark.fill")
-                    .font(.system(size: 9))
-                    .foregroundStyle(Color.accentColor.opacity(0.7))
+        Button {
+            let path = movie.mediaType == .series ? "tv" : "movie"
+            if let url = URL(string: "https://www.themoviedb.org/\(path)/\(movie.id)") {
+                NSWorkspace.shared.open(url)
             }
+        } label: {
+            HStack(spacing: 6) {
+                // Titel
+                Text(movie.title)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Color.primary)
+                    .lineLimit(1)
 
-            // Titel + Anbieter-Namen
-            Button {
-                let path = movie.mediaType == .series ? "tv" : "movie"
-                if let url = URL(string: "https://www.themoviedb.org/\(path)/\(movie.id)") {
-                    NSWorkspace.shared.open(url)
-                }
-            } label: {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(movie.title)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Color.primary)
-                        .lineLimit(1)
+                Spacer(minLength: 4)
 
-                    if !movie.availableOn.isEmpty {
-                        HStack(spacing: 3) {
-                            ForEach(movie.availableOn) { provider in
-                                Text(provider.name)
-                                    .font(.system(size: 9, weight: .medium))
-                                    .foregroundStyle(provider.color)
-                            }
+                // Anbieter-Punkte rechts neben dem Titel
+                if !movie.availableOn.isEmpty {
+                    HStack(spacing: 3) {
+                        ForEach(movie.availableOn) { provider in
+                            Circle()
+                                .fill(provider.color)
+                                .frame(width: 7, height: 7)
+                                .help(provider.name)
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .buttonStyle(.plain)
 
-            Spacer(minLength: 0)
-
-            if hovered {
-                Button(action: onRemove) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(.secondary)
+                // Entfernen-Button beim Hover
+                if hovered {
+                    Button(action: onRemove) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity.combined(with: .scale))
                 }
-                .buttonStyle(.plain)
-                .transition(.opacity.combined(with: .scale))
             }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 5)
+            .background(hovered ? Color.primary.opacity(0.05) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 5))
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 5)
-        .background(hovered ? Color.primary.opacity(0.05) : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: 5))
-        .contentShape(Rectangle())
+        .buttonStyle(.plain)
         .onHover { hovered = $0 }
         .animation(.easeInOut(duration: 0.1), value: hovered)
     }
