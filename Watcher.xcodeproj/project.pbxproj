@@ -27,7 +27,7 @@
 		B6C183EC69B2A1C93606E2C2 /* FilterSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 118B37892C9668ABA6E2B15C /* FilterSidebarView.swift */; };
 		CCA0D1B0529D0CF6255D8AAD /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EC20B37FA287124AE9EFBA4 /* KeychainService.swift */; };
 		CE7923CF8D33FC0090366089 /* MovieViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A197BDA2653F77008EC4926D /* MovieViewModel.swift */; };
-		CEF34FB2CCCA592E7EBFAFC9 /* FilmMateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CAE5EF4008FD87D3491DAF2 /* FilmMateApp.swift */; };
+		CEF34FB2CCCA592E7EBFAFC9 /* WatcherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CAE5EF4008FD87D3491DAF2 /* WatcherApp.swift */; };
 		CF10F90B417D6E7480D34028 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 18E5198E1A9BD7B80164E63F /* Localizable.strings */; };
 		D5B554EB69C98B5B06D816EF /* MovieDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF426A608AFDEA00F4DC957 /* MovieDetailView.swift */; };
 		E044379D82CEAB297B0357FB /* Movie.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665DB976257076840C9F0556 /* Movie.swift */; };
@@ -53,7 +53,7 @@
 		665DB976257076840C9F0556 /* Movie.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Movie.swift; sourceTree = "<group>"; };
 		67DD4CD564B43384B5CF943C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6853FE50AAA126AA5A116E96 /* ProviderBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderBadge.swift; sourceTree = "<group>"; };
-		7CAE5EF4008FD87D3491DAF2 /* FilmMateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilmMateApp.swift; sourceTree = "<group>"; };
+		7CAE5EF4008FD87D3491DAF2 /* WatcherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatcherApp.swift; sourceTree = "<group>"; };
 		8111F468056000299B896059 /* MovieGridCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieGridCard.swift; sourceTree = "<group>"; };
 		90E5EEDAF751ABB6463E3D23 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		910F5257ED1D2853FF63C626 /* Genre.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Genre.swift; sourceTree = "<group>"; };
@@ -64,7 +64,7 @@
 		BB22CC33DD44EE55FF6677AA /* MediaTypeFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaTypeFilter.swift; sourceTree = "<group>"; };
 		F0CE4EEA8D975B85301A5061 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		F74AC94E3B6EC3ED406F6099 /* GenreChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenreChip.swift; sourceTree = "<group>"; };
-		F9CCE733AD5A01E89F4A735F /* FilmMate.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FilmMate.entitlements; sourceTree = "<group>"; };
+		F9CCE733AD5A01E89F4A735F /* Watcher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Watcher.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -90,10 +90,10 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
-		181E258BE3C9C5E9B0158422 /* FilmMate */ = {
+		181E258BE3C9C5E9B0158422 /* Watcher */ = {
 			isa = PBXGroup;
 			children = (
-				7CAE5EF4008FD87D3491DAF2 /* FilmMateApp.swift */,
+				7CAE5EF4008FD87D3491DAF2 /* WatcherApp.swift */,
 				EC7D76567AD43EADC81944EB /* Localization */,
 				09DBE2D7C263AA275ACFB26D /* Models */,
 				2DC6357018C5B0849B13C884 /* Resources */,
@@ -101,7 +101,7 @@
 				17EDE28134CD92417A441D98 /* ViewModels */,
 				B3DBABE7FBE371E47A89D9BC /* Views */,
 			);
-			name = FilmMate;
+			name = Watcher;
 			path = Sources/FilmMate;
 			sourceTree = "<group>";
 		};
@@ -117,7 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				1A1E563B332B88F2C1F19F97 /* Assets.xcassets */,
-				F9CCE733AD5A01E89F4A735F /* FilmMate.entitlements */,
+				F9CCE733AD5A01E89F4A735F /* Watcher.entitlements */,
 				67DD4CD564B43384B5CF943C /* Info.plist */,
 			);
 			path = Resources;
@@ -126,7 +126,7 @@
 		306530D3BBBBC0EB74CC22F5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				48EBBA88316ECE60160A8A94 /* FilmMate.app */,
+				48EBBA88316ECE60160A8A94 /* Watcher.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -179,9 +179,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		71CA191679045C5B2B46354E /* FilmMate */ = {
+		71CA191679045C5B2B46354E /* Watcher */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8C59CE5191A04B3BD6DD35F5 /* Build configuration list for PBXNativeTarget "FilmMate" */;
+			buildConfigurationList = 8C59CE5191A04B3BD6DD35F5 /* Build configuration list for PBXNativeTarget "Watcher" */;
 			buildPhases = (
 				63804E8E1235871E2B8718E6 /* Sources */,
 				897D559DB095B46873C3F44C /* Resources */,
@@ -190,11 +190,11 @@
 			);
 			dependencies = (
 			);
-			name = FilmMate;
+			name = Watcher;
 			packageProductDependencies = (
 			);
-			productName = FilmMate;
-			productReference = 48EBBA88316ECE60160A8A94 /* FilmMate.app */;
+			productName = Watcher;
+			productReference = 48EBBA88316ECE60160A8A94 /* Watcher.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -211,7 +211,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A852E69EB231245A43D55BC7 /* Build configuration list for PBXProject "FilmMate" */;
+			buildConfigurationList = A852E69EB231245A43D55BC7 /* Build configuration list for PBXProject "Watcher" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -226,7 +226,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				71CA191679045C5B2B46354E /* FilmMate */,
+				71CA191679045C5B2B46354E /* Watcher */,
 			);
 		};
 /* End PBXProject section */
@@ -249,7 +249,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5AB4C39BE02E45BDFE2A4E5F /* DatabaseService.swift in Sources */,
-				CEF34FB2CCCA592E7EBFAFC9 /* FilmMateApp.swift in Sources */,
+				CEF34FB2CCCA592E7EBFAFC9 /* WatcherApp.swift in Sources */,
 				B6C183EC69B2A1C93606E2C2 /* FilterSidebarView.swift in Sources */,
 				721C93AABBF498184D9FA903 /* FlowLayout.swift in Sources */,
 				11B612E276FB821F6AA8C1D6 /* Genre.swift in Sources */,
@@ -346,7 +346,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Sources/FilmMate/Resources/FilmMate.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Sources/FilmMate/Resources/Watcher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = Sources/FilmMate/Resources/Info.plist;
@@ -354,7 +354,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.filmmate.FilmMate;
+				PRODUCT_BUNDLE_IDENTIFIER = com.watcher.Watcher;
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
@@ -364,7 +364,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Sources/FilmMate/Resources/FilmMate.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Sources/FilmMate/Resources/Watcher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = Sources/FilmMate/Resources/Info.plist;
@@ -372,7 +372,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.filmmate.FilmMate;
+				PRODUCT_BUNDLE_IDENTIFIER = com.watcher.Watcher;
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
@@ -438,7 +438,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8C59CE5191A04B3BD6DD35F5 /* Build configuration list for PBXNativeTarget "FilmMate" */ = {
+		8C59CE5191A04B3BD6DD35F5 /* Build configuration list for PBXNativeTarget "Watcher" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				936031B9685F4DE19D0F35B4 /* Debug */,
@@ -447,7 +447,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		A852E69EB231245A43D55BC7 /* Build configuration list for PBXProject "FilmMate" */ = {
+		A852E69EB231245A43D55BC7 /* Build configuration list for PBXProject "Watcher" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				57AD442687E6B7151EDC68FD /* Debug */,

@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct FilmMateApp: App {
+struct WatcherApp: App {
     @StateObject private var settings = SettingsViewModel()
 
     var body: some Scene {
