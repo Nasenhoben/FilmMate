@@ -12,20 +12,15 @@ struct FilterSidebarView: View {
             // Platzhalter für die Ampel-Buttons der Titelleiste
             Color.clear.frame(height: 8)
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    contentTypeSection
-                    Divider().padding(.horizontal, 12)
-                    providerSection
-                    Divider().padding(.horizontal, 12)
-                    ratingSection
-                    Divider().padding(.horizontal, 12)
-                    runtimeSection
-                    Divider().padding(.horizontal, 12)
-                    genreSection
-                }
+            VStack(spacing: 0) {
+                contentTypeSection
+                Divider().padding(.horizontal, 12)
+                providerSection
+                Divider().padding(.horizontal, 12)
+                filterSection
+                Divider().padding(.horizontal, 12)
+                genreSection
             }
-            .scrollIndicators(.never)
             bottomBar
         }
         .frame(width: 240)
@@ -89,17 +84,17 @@ struct FilterSidebarView: View {
             }
         }
         .padding(.horizontal, 10)
-        .padding(.top, 12)
-        .padding(.bottom, 10)
+        .padding(.top, 8)
+        .padding(.bottom, 6)
     }
 
     // MARK: – Streaming Providers
 
     private var providerSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 3) {
             sectionHeader("filter.providers")
 
-            VStack(spacing: 2) {
+            VStack(spacing: 1) {
                 ForEach(StreamingProvider.allCases) { provider in
                     ProviderToggleRow(
                         provider: provider,
@@ -112,79 +107,70 @@ struct FilterSidebarView: View {
         }
         .padding(.horizontal, 10)
         .padding(.top, 6)
-        .padding(.bottom, 10)
+        .padding(.bottom, 6)
     }
 
-    // MARK: – Bewertungs-Filter
+    // MARK: – Bewertung + Laufzeit (kombiniert)
 
-    private var ratingSection: some View {
+    private var filterSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("filter.rating")
-
-            HStack(spacing: 4) {
-                ForEach([0.0, 6.0, 7.0, 8.0], id: \.self) { rating in
-                    let isSelected = vm.minimumRating == rating
-                    Button {
-                        vm.minimumRating = rating
-                        vm.suggestedMovies = []
-                    } label: {
-                        Text(rating == 0 ? String(localized: "filter.rating.all") : "\(Int(rating))+")
-                            .font(.system(size: 11, weight: isSelected ? .bold : .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 5)
-                            .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
-                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
-                            )
+            // Bewertung
+            VStack(alignment: .leading, spacing: 4) {
+                sectionHeader("filter.rating")
+                HStack(spacing: 4) {
+                    ForEach([0.0, 6.0, 7.0, 8.0], id: \.self) { rating in
+                        let isSelected = vm.minimumRating == rating
+                        Button {
+                            vm.minimumRating = rating
+                            vm.suggestedMovies = []
+                        } label: {
+                            Text(rating == 0 ? String(localized: "filter.rating.all") : "\(Int(rating))+")
+                                .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
+                                .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
+                                .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .overlay(RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5))
+                        }
+                        .buttonStyle(.plain)
+                        .animation(.easeInOut(duration: 0.12), value: isSelected)
                     }
-                    .buttonStyle(.plain)
-                    .animation(.easeInOut(duration: 0.12), value: isSelected)
+                }
+            }
+
+            // Laufzeit
+            VStack(alignment: .leading, spacing: 4) {
+                sectionHeader("filter.runtime")
+                HStack(spacing: 4) {
+                    ForEach(RuntimeFilter.allCases) { filter in
+                        let isSelected = vm.runtimeFilter == filter
+                        Button {
+                            vm.runtimeFilter = filter
+                            vm.suggestedMovies = []
+                        } label: {
+                            Text(filter.label)
+                                .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
+                                .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
+                                .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .overlay(RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5))
+                        }
+                        .buttonStyle(.plain)
+                        .animation(.easeInOut(duration: 0.12), value: isSelected)
+                    }
                 }
             }
         }
         .padding(.horizontal, 10)
-        .padding(.top, 12)
-        .padding(.bottom, 10)
-    }
-
-    // MARK: – Laufzeit-Filter
-
-    private var runtimeSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("filter.runtime")
-
-            HStack(spacing: 4) {
-                ForEach(RuntimeFilter.allCases) { filter in
-                    let isSelected = vm.runtimeFilter == filter
-                    Button {
-                        vm.runtimeFilter = filter
-                        vm.suggestedMovies = []
-                    } label: {
-                        Text(filter.label)
-                            .font(.system(size: 11, weight: isSelected ? .bold : .medium))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 5)
-                            .background(isSelected ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
-                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .animation(.easeInOut(duration: 0.12), value: isSelected)
-                }
-            }
-        }
-        .padding(.horizontal, 10)
-        .padding(.top, 12)
-        .padding(.bottom, 10)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
     }
 
     // MARK: – Watchlist
@@ -268,12 +254,12 @@ struct FilterSidebarView: View {
     // MARK: – Genres
 
     private var genreSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             sectionHeader("filter.genres")
 
             LazyVGrid(
-                columns: [GridItem(.flexible(), spacing: 5), GridItem(.flexible(), spacing: 5)],
-                spacing: 5
+                columns: [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)],
+                spacing: 4
             ) {
                 ForEach(Genre.allCases) { genre in
                     GenreToggleTile(
@@ -304,8 +290,8 @@ struct FilterSidebarView: View {
             }
         }
         .padding(.horizontal, 10)
-        .padding(.top, 12)
-        .padding(.bottom, 10)
+        .padding(.top, 6)
+        .padding(.bottom, 8)
         .animation(.spring(duration: 0.25), value: vm.selectedGenres.isEmpty && vm.selectedProviders.isEmpty)
     }
 
@@ -437,7 +423,7 @@ struct ProviderToggleRow: View {
                 }
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.vertical, 3)
             .background(
                 isSelected
                     ? provider.color.opacity(0.12)
@@ -524,22 +510,15 @@ struct GenreToggleTile: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 4) {
+            VStack(spacing: 1) {
                 Text(genre.emoji)
-                    .font(.system(size: 11))
+                    .font(.system(size: 13))
                 Text(genre.localizedName)
-                    .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                    .font(.system(size: 9, weight: isSelected ? .bold : .medium))
                     .lineLimit(1)
-                Spacer(minLength: 0)
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 8, weight: .black))
-                        .foregroundStyle(genre.color)
-                        .transition(.scale.combined(with: .opacity))
-                }
+                    .minimumScaleFactor(0.7)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 5)
+            .frame(maxWidth: .infinity)
             .padding(.vertical, 5)
             .background(
                 isSelected
