@@ -39,4 +39,14 @@ enum StreamingProvider: Int, CaseIterable, Identifiable, Codable {
         case .paramountPlus: return "p.circle.fill"
         }
     }
+
+    var initial: String {
+        switch self {
+        case .netflix:       return "N"
+        case .amazonPrime:   return "A"
+        case .disneyPlus:    return "D"
+        case .hboMax:        return "H"
+        case .paramountPlus: return "P"
+        }
+    }
 }
