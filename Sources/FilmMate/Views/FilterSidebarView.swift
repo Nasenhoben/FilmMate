@@ -22,8 +22,6 @@ struct FilterSidebarView: View {
                     Divider().padding(.horizontal, 12)
                     runtimeSection
                     Divider().padding(.horizontal, 12)
-                    watchlistSection
-                    Divider().padding(.horizontal, 12)
                     genreSection
                 }
             }
