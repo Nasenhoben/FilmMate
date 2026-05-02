@@ -85,6 +85,14 @@
 "watchlist.empty" = "Noch keine Einträge";
 "watchlist.more" = "+%d weitere";
 "watchlist.remove_all" = "Alle entfernen";
+"watchlist.show_all" = "Alle anzeigen";
+"watchlist.overview.title" = "Meine Watchlist";
+"watchlist.empty_title" = "Watchlist ist leer";
+"watchlist.empty_subtitle" = "Füge Filme oder Serien zur Watchlist hinzu, um sie hier zu sehen.";
+
+/* Tabs */
+"tab.discover" = "Entdecken";
+"tab.watchlist" = "Watchlist";
 
 /* Buttons */
 "button.ok" = "OK";

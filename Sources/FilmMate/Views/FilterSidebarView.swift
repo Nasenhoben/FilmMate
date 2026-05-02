@@ -5,6 +5,7 @@ struct FilterSidebarView: View {
     @ObservedObject var vm: MovieViewModel
     @ObservedObject private var watchlist = WatchlistService.shared
     let onSettings: () -> Void
+    let onShowWatchlist: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -173,17 +174,24 @@ struct FilterSidebarView: View {
                 Spacer()
                 if !watchlist.movies.isEmpty {
                     HStack(spacing: 6) {
-                        Text("\(watchlist.movies.count)")
-                            .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
-                            .background(Color.accentColor)
-                            .clipShape(Capsule())
+                        Button { onShowWatchlist() } label: {
+                            HStack(spacing: 2) {
+                                Text("\(watchlist.movies.count)")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(Color.accentColor)
+                                    .clipShape(Capsule())
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 8, weight: .semibold))
+                                    .foregroundStyle(Color.accentColor.opacity(0.7))
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .help(String(localized: "watchlist.show_all"))
 
-                        Button {
-                            watchlist.removeAll()
-                        } label: {
+                        Button { watchlist.removeAll() } label: {
                             Image(systemName: "trash")
                                 .font(.system(size: 10))
                                 .foregroundStyle(.secondary)
@@ -207,18 +215,21 @@ struct FilterSidebarView: View {
                 .padding(.vertical, 4)
             } else {
                 VStack(spacing: 2) {
-                    ForEach(watchlist.movies.prefix(5)) { movie in
+                    ForEach(watchlist.movies.prefix(3)) { movie in
                         WatchlistRowItem(movie: movie) {
                             watchlist.remove(movie)
                         }
                     }
                 }
 
-                if watchlist.movies.count > 5 {
-                    Text(String(format: String(localized: "watchlist.more"), watchlist.movies.count - 5))
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 2)
+                if watchlist.movies.count > 3 {
+                    Button { onShowWatchlist() } label: {
+                        Text(String(format: String(localized: "watchlist.more"), watchlist.movies.count - 3))
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.accentColor.opacity(0.8))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 2)
                 }
             }
         }

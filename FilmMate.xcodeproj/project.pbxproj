@@ -32,11 +32,13 @@
 		D5B554EB69C98B5B06D816EF /* MovieDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF426A608AFDEA00F4DC957 /* MovieDetailView.swift */; };
 		E044379D82CEAB297B0357FB /* Movie.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665DB976257076840C9F0556 /* Movie.swift */; };
 		F4F2ED54771D4575F0E5F4AC /* WatchlistService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A4A8C90677CB4ED469A62F /* WatchlistService.swift */; };
+		EE55FF6677AA8899BBCCDD11 /* WatchlistOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6677AA8899BBCCDD11EE22 /* WatchlistOverviewView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		08561778FD065749E8E5B83F /* StarRating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRating.swift; sourceTree = "<group>"; };
 		0CF426A608AFDEA00F4DC957 /* MovieDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieDetailView.swift; sourceTree = "<group>"; };
+		FF6677AA8899BBCCDD11EE22 /* WatchlistOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistOverviewView.swift; sourceTree = "<group>"; };
 		0F5B48AB7272B15A436D9D49 /* TMDBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDBService.swift; sourceTree = "<group>"; };
 		118B37892C9668ABA6E2B15C /* FilterSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterSidebarView.swift; sourceTree = "<group>"; };
 		18E5198E1A9BD7B80164E63F /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 				4856618BA04C0F81C970B570 /* MovieCardView.swift */,
 				0CF426A608AFDEA00F4DC957 /* MovieDetailView.swift */,
 				90E5EEDAF751ABB6463E3D23 /* SettingsView.swift */,
+				FF6677AA8899BBCCDD11EE22 /* WatchlistOverviewView.swift */,
 				D7E54989774784BB37AE7564 /* Components */,
 			);
 			path = Views;
@@ -258,6 +261,7 @@
 				7F35E040FF652A0AD24AEE3A /* MovieDetail.swift in Sources */,
 				D5B554EB69C98B5B06D816EF /* MovieDetailView.swift in Sources */,
 				A7696EA12D23C44D23D1FC2D /* MovieGridCard.swift in Sources */,
+				EE55FF6677AA8899BBCCDD11 /* WatchlistOverviewView.swift in Sources */,
 				CE7923CF8D33FC0090366089 /* MovieViewModel.swift in Sources */,
 				151A422C243863F2BB1701C6 /* ProviderBadge.swift in Sources */,
 				AA11BB22CC33DD44EE55FF66 /* MediaTypeFilter.swift in Sources */,
