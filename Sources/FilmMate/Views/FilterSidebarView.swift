@@ -72,32 +72,22 @@ struct FilterSidebarView: View {
                 Button {
                     withAnimation(.easeInOut(duration: 0.18)) { activeTab = .watchlist }
                 } label: {
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: isWatchlist ? "bookmark.fill" : "bookmark")
-                            .font(.system(size: 12, weight: .semibold))
-                            .frame(width: 30, height: 26)
-                            .background(isWatchlist ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
-                            .foregroundStyle(isWatchlist ? Color.accentColor : Color.secondary)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .strokeBorder(isWatchlist ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
-                            )
-                        if !watchlist.movies.isEmpty {
-                            Text("\(watchlist.movies.count)")
-                                .font(.system(size: 7, weight: .black))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 3)
-                                .padding(.vertical, 1.5)
-                                .background(Color.accentColor)
-                                .clipShape(Capsule())
-                                .offset(x: 4, y: -4)
-                        }
-                    }
+                    Text(String(localized: "tab.watchlist"))
+                        .font(.system(size: 11, weight: isWatchlist ? .bold : .medium))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 5)
+                        .background(isWatchlist ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.06))
+                        .foregroundStyle(isWatchlist ? Color.accentColor : Color.secondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(isWatchlist ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                        )
                 }
                 .buttonStyle(.plain)
                 .animation(.easeInOut(duration: 0.12), value: isWatchlist)
-                .help(String(localized: "tab.watchlist"))
             }
         }
         .padding(.horizontal, 10)
