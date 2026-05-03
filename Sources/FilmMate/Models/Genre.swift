@@ -53,7 +53,7 @@ enum Genre: Int, CaseIterable, Identifiable, Codable {
         case .crime:          return Color(red: 0.35, green: 0.35, blue: 0.40) // slate
         case .drama:          return Color(red: 0.56, green: 0.27, blue: 0.68) // purple
         case .fantasy:        return Color(red: 0.40, green: 0.20, blue: 0.80) // indigo
-        case .horror:         return Color(red: 0.15, green: 0.15, blue: 0.15) // near-black
+        case .horror:         return Color(red: 0.65, green: 0.10, blue: 0.10) // dark red
         case .romance:        return Color(red: 0.95, green: 0.30, blue: 0.55) // pink
         case .scienceFiction: return Color(red: 0.05, green: 0.55, blue: 0.95) // blue
         case .thriller:       return Color(red: 0.80, green: 0.40, blue: 0.10) // burnt orange

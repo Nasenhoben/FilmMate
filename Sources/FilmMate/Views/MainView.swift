@@ -45,7 +45,6 @@ struct MainView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.easeInOut(duration: 0.18), value: activeTab)
         }
-        .ignoresSafeArea(edges: .top)
         .frame(minWidth: 800, minHeight: 560)
         .sheet(isPresented: $showSettings) {
             SettingsSheet(settings: settings, vm: vm, isPresented: $showSettings)
@@ -169,10 +168,8 @@ struct MainView: View {
             .buttonStyle(.plain)
             .keyboardShortcut(",", modifiers: .command)
         }
-        .padding(.leading, 84)
-        .padding(.trailing, 14)
-        .padding(.top, 12)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Content
@@ -310,29 +307,29 @@ struct SuggestedMovieView: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 14), count: 4)
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 0) {
-                HStack {
-                    Text(String(localized: "suggestion.title"))
-                        .font(.headline)
-                    Spacer()
-                    Button { vm.suggestRandom() } label: {
-                        HStack(spacing: 5) {
-                            Image(systemName: "shuffle")
-                            Text(String(localized: "action.another"))
-                        }
-                        .font(.callout)
-                        .padding(.horizontal, 13).padding(.vertical, 6)
-                        .background(Color.accentColor.opacity(0.1))
-                        .foregroundStyle(Color.accentColor)
-                        .clipShape(Capsule())
+        VStack(spacing: 0) {
+            HStack {
+                Text(String(localized: "suggestion.title"))
+                    .font(.headline)
+                Spacer()
+                Button { vm.suggestRandom() } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "shuffle")
+                        Text(String(localized: "action.another"))
                     }
-                    .buttonStyle(.plain)
+                    .font(.callout)
+                    .padding(.horizontal, 13).padding(.vertical, 6)
+                    .background(Color.accentColor.opacity(0.1))
+                    .foregroundStyle(Color.accentColor)
+                    .clipShape(Capsule())
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+            .padding(.bottom, 12)
 
+            ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(Array(vm.suggestedMovies.enumerated()), id: \.element.id) { index, movie in
                         MovieGridCard(movie: movie)
@@ -346,8 +343,8 @@ struct SuggestedMovieView: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 16)
             }
+            .animation(Animation.spring(duration: 0.35), value: vm.suggestedMovies.map(\.id))
         }
-        .animation(Animation.spring(duration: 0.35), value: vm.suggestedMovies.map(\.id))
     }
 }
 
