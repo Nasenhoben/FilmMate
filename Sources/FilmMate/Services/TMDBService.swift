@@ -4,10 +4,11 @@ actor TMDBService {
     static let shared = TMDBService()
 
     private let baseURL = "https://api.themoviedb.org/3"
-    private let minimumVotes = 50
-    private let pagesPerRatingSort = 50     // 50 × 20 = 1.000 top-bewertete Filme pro Anbieter
-    private let pagesPerDateSort   = 10     // 10 × 20 =   200 neueste Filme pro Anbieter
-    private let maxConcurrentRequests = 5   // parallele Requests
+    private let minimumVotes = 20
+    private let pagesPerRatingSort    = 100  // 100 × 20 = 2.000 top-bewertete Filme pro Anbieter
+    private let pagesPerDateSort      = 20   //  20 × 20 =   400 neueste Filme pro Anbieter
+    private let pagesPerPopularSort   = 20   //  20 × 20 =   400 populärste Filme pro Anbieter
+    private let maxConcurrentRequests = 5    // parallele Requests
 
     private var apiKey: String {
         KeychainService.shared.retrieve() ?? ""
@@ -41,10 +42,10 @@ actor TMDBService {
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_movies")) }
 
         let providers = StreamingProvider.allCases
-        let totalUnits = Double(providers.count * (pagesPerRatingSort + pagesPerDateSort))
+        let totalUnits = Double(providers.count * (pagesPerRatingSort + pagesPerDateSort + pagesPerPopularSort))
         let counter = ProgressCounter(total: totalUnits, callback: progressCallback)
 
-        // Fetch all providers concurrently – both sort strategies
+        // Fetch all providers concurrently – three sort strategies
         var movieMap: [Int: Movie] = [:]
 
         func merge(_ results: [(TMDBMovie, StreamingProvider)]) {
@@ -70,14 +71,18 @@ actor TMDBService {
                     try await self.fetchAllPages(for: provider, sortBy: "primary_release_date.desc",
                                                  pages: self.pagesPerDateSort, counter: counter)
                 }
+                group.addTask {
+                    try await self.fetchAllPages(for: provider, sortBy: "popularity.desc",
+                                                 pages: self.pagesPerPopularSort, counter: counter)
+                }
             }
             for try await results in group { merge(results) }
         }
 
         let sorted = Array(movieMap.values).sorted { $0.voteAverage > $1.voteAverage }
 
-        // Phase 2: Laufzeiten für die Top-500 Filme nachladen
-        let top500Ids = Array(sorted.prefix(500).map(\.id))
+        // Phase 2: Laufzeiten für die Top-2000 Filme nachladen
+        let top500Ids = Array(sorted.prefix(2000).map(\.id))
         await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
         let runtimes = await fetchRuntimes(for: top500Ids)
 
@@ -161,9 +166,10 @@ actor TMDBService {
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_series")) }
 
         let providers = StreamingProvider.allCases
-        let seriesPagesRating = 30
-        let seriesPagesDate   = 5
-        let totalUnits = Double(providers.count * (seriesPagesRating + seriesPagesDate))
+        let seriesPagesRating  = 60
+        let seriesPagesDate    = 10
+        let seriesPagesPopular = 20
+        let totalUnits = Double(providers.count * (seriesPagesRating + seriesPagesDate + seriesPagesPopular))
         let counter = ProgressCounter(total: totalUnits, callback: progressCallback)
 
         var seriesMap: [Int: Movie] = [:]
@@ -191,14 +197,18 @@ actor TMDBService {
                     try await self.fetchAllTVPages(for: provider, sortBy: "first_air_date.desc",
                                                    pages: seriesPagesDate, counter: counter)
                 }
+                group.addTask {
+                    try await self.fetchAllTVPages(for: provider, sortBy: "popularity.desc",
+                                                   pages: seriesPagesPopular, counter: counter)
+                }
             }
             for try await results in group { merge(results) }
         }
 
         let sorted = Array(seriesMap.values).sorted { $0.voteAverage > $1.voteAverage }
 
-        // Fetch episode runtimes for top 200 series
-        let top200Ids = Array(sorted.prefix(200).map(\.id))
+        // Fetch episode runtimes for top 1000 series
+        let top200Ids = Array(sorted.prefix(1000).map(\.id))
         await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
         let runtimes = await fetchEpisodeRuntimes(for: top200Ids)
 
