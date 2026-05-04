@@ -5,6 +5,7 @@ struct MovieDetailView: View {
     let movie: Movie
     @State private var movieDetails: TMDBMovieDetailResponse?
     @State private var seriesDetails: TMDBSeriesDetailResponse?
+    @State private var trailerKey: String?
     @State private var isLoading = true
     @ObservedObject private var watchlist = WatchlistService.shared
     @Environment(\.dismiss) private var dismiss
@@ -32,11 +33,19 @@ struct MovieDetailView: View {
         }
         .frame(width: 640, height: 580)
         .task {
-            if movie.mediaType == .series {
-                seriesDetails = try? await TMDBService.shared.fetchSeriesDetails(seriesId: movie.id)
-            } else {
-                movieDetails = try? await TMDBService.shared.fetchMovieDetails(movieId: movie.id)
-            }
+            async let details: () = {
+                if movie.mediaType == .series {
+                    seriesDetails = try? await TMDBService.shared.fetchSeriesDetails(seriesId: movie.id)
+                } else {
+                    movieDetails = try? await TMDBService.shared.fetchMovieDetails(movieId: movie.id)
+                }
+            }()
+            async let trailer: () = {
+                trailerKey = await TMDBService.shared.fetchTrailerKey(
+                    id: movie.id, isTV: movie.mediaType == .series
+                )
+            }()
+            _ = await (details, trailer)
             isLoading = false
         }
     }
@@ -248,27 +257,51 @@ struct MovieDetailView: View {
         }
     }
 
-    // MARK: – TMDB-Link
+    // MARK: – Buttons (Trailer + TMDB)
 
     private var tmdbButton: some View {
-        Button {
-            let path = movie.mediaType == .series ? "tv" : "movie"
-            if let url = URL(string: "https://www.themoviedb.org/\(path)/\(movie.id)") {
-                NSWorkspace.shared.open(url)
+        HStack(spacing: 10) {
+            if let key = trailerKey {
+                Button {
+                    if let url = URL(string: "https://www.youtube.com/watch?v=\(key)") {
+                        NSWorkspace.shared.open(url)
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "play.fill")
+                        Text(String(localized: "detail.watch_trailer"))
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 9)
+                    .background(Color.red.opacity(0.12))
+                    .foregroundStyle(Color.red)
+                    .clipShape(RoundedRectangle(cornerRadius: 9))
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "arrow.up.right.square")
-                Text(String(localized: "detail.open_tmdb"))
+
+            Button {
+                let path = movie.mediaType == .series ? "tv" : "movie"
+                if let url = URL(string: "https://www.themoviedb.org/\(path)/\(movie.id)") {
+                    NSWorkspace.shared.open(url)
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up.right.square")
+                    Text(String(localized: "detail.open_tmdb"))
+                }
+                .font(.subheadline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 9)
+                .background(Color.primary.opacity(0.06))
+                .foregroundStyle(Color.primary.opacity(0.7))
+                .clipShape(RoundedRectangle(cornerRadius: 9))
             }
-            .font(.subheadline)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 9)
-            .background(Color.primary.opacity(0.06))
-            .foregroundStyle(Color.primary.opacity(0.7))
-            .clipShape(RoundedRectangle(cornerRadius: 9))
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .animation(.spring(duration: 0.3), value: trailerKey != nil)
     }
 
     // MARK: – Hilfsmethode

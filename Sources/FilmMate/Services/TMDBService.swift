@@ -360,6 +360,40 @@ actor TMDBService {
         try await fetchRuntimeOnly(movieId: movieId)
     }
 
+    // MARK: - Trailer
+
+    func fetchTrailerKey(id: Int, isTV: Bool) async -> String? {
+        // Try current language first, fall back to English
+        if let key = await _fetchTrailerKey(id: id, isTV: isTV, lang: language) { return key }
+        if language != "en-US" { return await _fetchTrailerKey(id: id, isTV: isTV, lang: "en-US") }
+        return nil
+    }
+
+    private func _fetchTrailerKey(id: Int, isTV: Bool, lang: String) async -> String? {
+        let path = isTV ? "tv" : "movie"
+        var components = URLComponents(string: "\(baseURL)/\(path)/\(id)/videos")!
+        components.queryItems = [
+            URLQueryItem(name: "api_key",  value: apiKey),
+            URLQueryItem(name: "language", value: lang)
+        ]
+        guard let url = components.url,
+              let (data, response) = try? await URLSession.shared.data(from: url),
+              (response as? HTTPURLResponse)?.statusCode == 200
+        else { return nil }
+
+        struct VideoResult: Codable {
+            let key: String
+            let site: String
+            let type: String
+            let official: Bool?
+        }
+        struct VideosResponse: Codable { let results: [VideoResult] }
+
+        guard let decoded = try? JSONDecoder().decode(VideosResponse.self, from: data) else { return nil }
+        let trailers = decoded.results.filter { $0.site == "YouTube" && $0.type == "Trailer" }
+        return (trailers.first(where: { $0.official == true }) ?? trailers.first)?.key
+    }
+
     private func fetchRuntimeOnly(movieId: Int) async throws -> Int? {
         var components = URLComponents(string: "\(baseURL)/movie/\(movieId)")!
         components.queryItems = [

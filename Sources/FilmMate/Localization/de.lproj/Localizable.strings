@@ -113,6 +113,7 @@
 "detail.overview" = "Inhaltsangabe";
 "detail.cast" = "Besetzung";
 "detail.open_tmdb" = "Auf TMDB öffnen";
+"detail.watch_trailer" = "Trailer ansehen";
 "detail.seasons" = "Staffeln";
 "detail.episodes" = "Episoden";
 "detail.episode_runtime" = "ca. %dmin / Episode";
