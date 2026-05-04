@@ -4,10 +4,10 @@ actor TMDBService {
     static let shared = TMDBService()
 
     private let baseURL = "https://api.themoviedb.org/3"
-    private let minimumVotes = 20
-    private let pagesPerRatingSort    = 100  // 100 × 20 = 2.000 top-bewertete Filme pro Anbieter
-    private let pagesPerDateSort      = 20   //  20 × 20 =   400 neueste Filme pro Anbieter
-    private let pagesPerPopularSort   = 20   //  20 × 20 =   400 populärste Filme pro Anbieter
+    private let minimumVotes = 1
+    private let pagesPerRatingSort    = 500  // TMDB-Maximum: 500 × 20 = 10.000 pro Anbieter
+    private let pagesPerDateSort      = 500  // TMDB-Maximum: 500 × 20 = 10.000 pro Anbieter
+    private let pagesPerPopularSort   = 500  // TMDB-Maximum: 500 × 20 = 10.000 pro Anbieter
     private let maxConcurrentRequests = 5    // parallele Requests
 
     private var apiKey: String {
@@ -81,10 +81,10 @@ actor TMDBService {
 
         let sorted = Array(movieMap.values).sorted { $0.voteAverage > $1.voteAverage }
 
-        // Phase 2: Laufzeiten für die Top-2000 Filme nachladen
-        let top500Ids = Array(sorted.prefix(2000).map(\.id))
+        // Phase 2: Laufzeiten für alle Filme nachladen
+        let allMovieIds = sorted.map(\.id)
         await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
-        let runtimes = await fetchRuntimes(for: top500Ids)
+        let runtimes = await fetchRuntimes(for: allMovieIds)
 
         let movies = sorted.map { movie -> Movie in
             var m = movie
@@ -166,9 +166,9 @@ actor TMDBService {
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_series")) }
 
         let providers = StreamingProvider.allCases
-        let seriesPagesRating  = 60
-        let seriesPagesDate    = 10
-        let seriesPagesPopular = 20
+        let seriesPagesRating  = 500  // TMDB-Maximum
+        let seriesPagesDate    = 500  // TMDB-Maximum
+        let seriesPagesPopular = 500  // TMDB-Maximum
         let totalUnits = Double(providers.count * (seriesPagesRating + seriesPagesDate + seriesPagesPopular))
         let counter = ProgressCounter(total: totalUnits, callback: progressCallback)
 
@@ -207,10 +207,10 @@ actor TMDBService {
 
         let sorted = Array(seriesMap.values).sorted { $0.voteAverage > $1.voteAverage }
 
-        // Fetch episode runtimes for top 1000 series
-        let top200Ids = Array(sorted.prefix(1000).map(\.id))
+        // Fetch episode runtimes for all series
+        let allSeriesIds = sorted.map(\.id)
         await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
-        let runtimes = await fetchEpisodeRuntimes(for: top200Ids)
+        let runtimes = await fetchEpisodeRuntimes(for: allSeriesIds)
 
         let series = sorted.map { s -> Movie in
             var m = s
