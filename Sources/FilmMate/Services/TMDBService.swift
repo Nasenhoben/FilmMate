@@ -11,7 +11,7 @@ actor TMDBService {
     private let maxConcurrentRequests = 2    // parallele Requests
 
     private var apiKey: String {
-        KeychainService.shared.retrieve() ?? ""
+        UserDefaults.standard.string(forKey: "tmdb_api_key") ?? ""
     }
 
     // MARK: - API key validation

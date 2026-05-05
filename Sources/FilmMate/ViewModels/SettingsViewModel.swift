@@ -2,10 +2,16 @@ import Foundation
 import SwiftUI
 
 final class SettingsViewModel: ObservableObject {
-    // API key lives in Keychain, not UserDefaults
-    @Published var apiKey: String = KeychainService.shared.retrieve() ?? "" {
+    private let apiKeyStorageKey = "tmdb_api_key"
+
+    @Published var apiKey: String = UserDefaults.standard.string(forKey: "tmdb_api_key") ?? "" {
         didSet {
-            KeychainService.shared.save(apiKey)
+            let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                UserDefaults.standard.removeObject(forKey: apiKeyStorageKey)
+            } else {
+                UserDefaults.standard.set(trimmed, forKey: apiKeyStorageKey)
+            }
             apiKeyState = .unchecked
         }
     }
