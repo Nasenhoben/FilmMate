@@ -32,6 +32,12 @@ final class MovieViewModel: ObservableObject {
 
     var lastUpdated: Date? { db.lastUpdated }
 
+    var visibleProviders: [StreamingProvider] {
+        StreamingProvider.allCases.filter {
+            mediaTypeFilter == .movies ? !$0.isSeriesOnly : true
+        }
+    }
+
     func toggleGenre(_ genre: Genre) {
         if selectedGenres.contains(genre) {
             selectedGenres.remove(genre)
@@ -41,7 +47,16 @@ final class MovieViewModel: ObservableObject {
         suggestedMovies = []
     }
 
+    func setMediaType(_ type: MediaTypeFilter) {
+        if type == .movies {
+            selectedProviders.removeAll { $0.isSeriesOnly }
+        }
+        mediaTypeFilter = type
+        suggestedMovies = []
+    }
+
     func toggleProvider(_ provider: StreamingProvider) {
+        guard !provider.isSeriesOnly || mediaTypeFilter != .movies else { return }
         if selectedProviders.contains(provider) {
             selectedProviders.remove(provider)
         } else {

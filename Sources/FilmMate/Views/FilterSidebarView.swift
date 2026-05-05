@@ -51,8 +51,7 @@ struct FilterPopoverContent: View {
                 ForEach(MediaTypeFilter.allCases) { filter in
                     let isSelected = vm.mediaTypeFilter == filter
                     Button {
-                        vm.mediaTypeFilter = filter
-                        vm.suggestedMovies = []
+                        vm.setMediaType(filter)
                     } label: {
                         Text(filter.label)
                             .font(.system(size: 11, weight: isSelected ? .bold : .medium))
@@ -81,7 +80,7 @@ struct FilterPopoverContent: View {
         VStack(alignment: .leading, spacing: 3) {
             sectionHeader("filter.providers")
             VStack(spacing: 1) {
-                ForEach(StreamingProvider.allCases) { provider in
+                ForEach(vm.visibleProviders) { provider in
                     ProviderToggleRow(
                         provider: provider,
                         isSelected: vm.selectedProviders.contains(provider)

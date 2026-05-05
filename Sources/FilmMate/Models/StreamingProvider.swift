@@ -119,4 +119,8 @@ enum StreamingProvider: Int, CaseIterable, Identifiable, Codable {
         case .maxdome:       return "M"
         }
     }
+
+    var isSeriesOnly: Bool {
+        self == .crunchyroll
+    }
 }
