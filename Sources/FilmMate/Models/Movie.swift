@@ -55,7 +55,8 @@ struct Movie: Identifiable, Codable, Equatable {
         voteAverage = try container.decode(Double.self, forKey: .voteAverage)
         voteCount = try container.decode(Int.self, forKey: .voteCount)
         genreIds = try container.decode([Int].self, forKey: .genreIds)
-        availableOn = try container.decode([StreamingProvider].self, forKey: .availableOn)
+        let providerIds = try container.decode([Int].self, forKey: .availableOn)
+        availableOn = providerIds.compactMap(StreamingProvider.init(rawValue:))
         runtime = try container.decodeIfPresent(Int.self, forKey: .runtime)
         mediaType = try container.decodeIfPresent(MediaType.self, forKey: .mediaType) ?? .movie
         numberOfSeasons = try container.decodeIfPresent(Int.self, forKey: .numberOfSeasons)
