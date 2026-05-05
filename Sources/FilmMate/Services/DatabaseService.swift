@@ -80,7 +80,8 @@ final class DatabaseService: ObservableObject {
             let genreMatch    = genres.isEmpty || !Set(movie.genreIds).isDisjoint(with: Set(genres.map(\.rawValue)))
             let providerMatch = providers.isEmpty || !Set(movie.availableOn).isDisjoint(with: providers)
             let ratingMatch   = movie.voteAverage >= minimumRating
-            let runtimeMatch  = runtimeFilter.matches(movie.runtime)
+            let effectiveRuntime = movie.mediaType == .series ? movie.episodeRuntime : movie.runtime
+            let runtimeMatch  = runtimeFilter.matches(effectiveRuntime)
             let mediaMatch: Bool
             switch mediaTypeFilter {
             case .all:    mediaMatch = true
