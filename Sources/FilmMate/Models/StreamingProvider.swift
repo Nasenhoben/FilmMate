@@ -7,6 +7,7 @@ enum StreamingProvider: Int, CaseIterable, Identifiable, Codable {
     case disneyPlus = 337
     case hboMax = 1899
     case paramountPlus = 531
+    case crunchyroll = 283
 
     var id: Int { rawValue }
 
@@ -17,6 +18,7 @@ enum StreamingProvider: Int, CaseIterable, Identifiable, Codable {
         case .disneyPlus:    return "Disney+"
         case .hboMax:        return "HBO Max"
         case .paramountPlus: return "Paramount+"
+        case .crunchyroll:   return "Crunchyroll"
         }
     }
 
@@ -27,6 +29,7 @@ enum StreamingProvider: Int, CaseIterable, Identifiable, Codable {
         case .disneyPlus:    return Color(red: 0.07, green: 0.13, blue: 0.53)
         case .hboMax:        return Color(red: 0.36, green: 0.06, blue: 0.69)
         case .paramountPlus: return Color(red: 0.0, green: 0.44, blue: 0.82)
+        case .crunchyroll:   return Color(red: 0.98, green: 0.42, blue: 0.0)
         }
     }
 
@@ -37,6 +40,7 @@ enum StreamingProvider: Int, CaseIterable, Identifiable, Codable {
         case .disneyPlus:    return "star.circle.fill"
         case .hboMax:        return "h.circle.fill"
         case .paramountPlus: return "p.circle.fill"
+        case .crunchyroll:   return "c.circle.fill"
         }
     }
 
@@ -47,6 +51,7 @@ enum StreamingProvider: Int, CaseIterable, Identifiable, Codable {
         case .disneyPlus:    return "D"
         case .hboMax:        return "H"
         case .paramountPlus: return "P"
+        case .crunchyroll:   return "C"
         }
     }
 }
