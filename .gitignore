@@ -20,3 +20,4 @@ DerivedData/
 
 # Derived Data
 build/
+.derivedData/

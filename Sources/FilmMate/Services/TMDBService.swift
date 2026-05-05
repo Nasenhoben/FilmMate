@@ -106,21 +106,27 @@ actor TMDBService {
     ) async throws -> [(TMDBMovie, StreamingProvider)] {
         var results: [(TMDBMovie, StreamingProvider)] = []
 
+        let firstPage = try await discoverPage(provider: provider, sortBy: sortBy, page: 1)
+        results.append(contentsOf: firstPage.results.map { ($0, provider) })
+        await counter.increment(by: 1)
+
+        let pageLimit = min(pages, max(firstPage.totalPages, 1))
+        guard pageLimit > 1 else { return results }
+
         // Fetch pages in batches to respect rate limits
-        let batches = stride(from: 1, through: pages, by: maxConcurrentRequests)
-
+        let batches = stride(from: 2, through: pageLimit, by: maxConcurrentRequests)
         for batchStart in batches {
-            let batchEnd = min(batchStart + maxConcurrentRequests - 1, pages)
+            let batchEnd = min(batchStart + maxConcurrentRequests - 1, pageLimit)
 
-            try await withThrowingTaskGroup(of: [TMDBMovie].self) { group in
+            try await withThrowingTaskGroup(of: TMDBMovieResponse.self) { group in
                 for page in batchStart...batchEnd {
                     group.addTask {
                         try await self.discoverPage(provider: provider, sortBy: sortBy, page: page)
                     }
                 }
 
-                for try await movies in group {
-                    for movie in movies {
+                for try await response in group {
+                    for movie in response.results {
                         results.append((movie, provider))
                     }
                     await counter.increment(by: 1)
@@ -136,7 +142,7 @@ actor TMDBService {
 
     // MARK: - Single discover page
 
-    private func discoverPage(provider: StreamingProvider, sortBy: String, page: Int) async throws -> [TMDBMovie] {
+    private func discoverPage(provider: StreamingProvider, sortBy: String, page: Int) async throws -> TMDBMovieResponse {
         var components = URLComponents(string: "\(baseURL)/discover/movie")!
         components.queryItems = [
             URLQueryItem(name: "api_key",              value: apiKey),
@@ -153,7 +159,7 @@ actor TMDBService {
             throw TMDBError.invalidResponse
         }
 
-        return try JSONDecoder().decode(TMDBMovieResponse.self, from: data).results
+        return try JSONDecoder().decode(TMDBMovieResponse.self, from: data)
     }
 
     // MARK: - Series fetch
@@ -229,18 +235,25 @@ actor TMDBService {
         counter: ProgressCounter
     ) async throws -> [(TMDBTVShow, StreamingProvider)] {
         var results: [(TMDBTVShow, StreamingProvider)] = []
-        let batches = stride(from: 1, through: pages, by: maxConcurrentRequests)
 
+        let firstPage = try await discoverTVPage(provider: provider, sortBy: sortBy, page: 1)
+        results.append(contentsOf: firstPage.results.map { ($0, provider) })
+        await counter.increment(by: 1)
+
+        let pageLimit = min(pages, max(firstPage.totalPages, 1))
+        guard pageLimit > 1 else { return results }
+
+        let batches = stride(from: 2, through: pageLimit, by: maxConcurrentRequests)
         for batchStart in batches {
-            let batchEnd = min(batchStart + maxConcurrentRequests - 1, pages)
-            try await withThrowingTaskGroup(of: [TMDBTVShow].self) { group in
+            let batchEnd = min(batchStart + maxConcurrentRequests - 1, pageLimit)
+            try await withThrowingTaskGroup(of: TMDBTVResponse.self) { group in
                 for page in batchStart...batchEnd {
                     group.addTask {
                         try await self.discoverTVPage(provider: provider, sortBy: sortBy, page: page)
                     }
                 }
-                for try await shows in group {
-                    for show in shows { results.append((show, provider)) }
+                for try await response in group {
+                    for show in response.results { results.append((show, provider)) }
                     await counter.increment(by: 1)
                 }
             }
@@ -249,7 +262,7 @@ actor TMDBService {
         return results
     }
 
-    private func discoverTVPage(provider: StreamingProvider, sortBy: String, page: Int) async throws -> [TMDBTVShow] {
+    private func discoverTVPage(provider: StreamingProvider, sortBy: String, page: Int) async throws -> TMDBTVResponse {
         var components = URLComponents(string: "\(baseURL)/discover/tv")!
         components.queryItems = [
             URLQueryItem(name: "api_key",              value: apiKey),
@@ -265,7 +278,7 @@ actor TMDBService {
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
             throw TMDBError.invalidResponse
         }
-        return try JSONDecoder().decode(TMDBTVResponse.self, from: data).results
+        return try JSONDecoder().decode(TMDBTVResponse.self, from: data)
     }
 
     // MARK: - Series details
