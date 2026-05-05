@@ -5,9 +5,9 @@ actor TMDBService {
 
     private let baseURL = "https://api.themoviedb.org/3"
     private let minimumVotes = 20
-    private let pagesPerRatingSort    = 100  // 100 × 20 = 2.000 top-bewertete Filme pro Anbieter
-    private let pagesPerDateSort      = 20   //  20 × 20 =   400 neueste Filme pro Anbieter
-    private let pagesPerPopularSort   = 20   //  20 × 20 =   400 populärste Filme pro Anbieter
+    private let pagesPerRatingSort    = 500  // 500 × 20 = 10.000 top-bewertete Filme pro Anbieter
+    private let pagesPerDateSort      = 500  // 500 × 20 = 10.000 neueste Filme pro Anbieter
+    private let pagesPerPopularSort   = 500  // 500 × 20 = 10.000 populärste Filme pro Anbieter
     private let maxConcurrentRequests = 5    // parallele Requests
 
     private var apiKey: String {
@@ -166,9 +166,9 @@ actor TMDBService {
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_series")) }
 
         let providers = StreamingProvider.allCases
-        let seriesPagesRating  = 60
-        let seriesPagesDate    = 10
-        let seriesPagesPopular = 20
+        let seriesPagesRating  = 500
+        let seriesPagesDate    = 500
+        let seriesPagesPopular = 500
         let totalUnits = Double(providers.count * (seriesPagesRating + seriesPagesDate + seriesPagesPopular))
         let counter = ProgressCounter(total: totalUnits, callback: progressCallback)
 
