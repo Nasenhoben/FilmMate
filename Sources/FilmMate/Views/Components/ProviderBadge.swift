@@ -56,6 +56,7 @@ extension StreamingProvider {
         case .disneyPlus:    return "D+"
         case .hboMax:        return "HBO"
         case .paramountPlus: return "P+"
+        case .crunchyroll:   return "CR"
         }
     }
 }
