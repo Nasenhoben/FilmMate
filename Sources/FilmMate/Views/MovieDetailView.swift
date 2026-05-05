@@ -33,19 +33,14 @@ struct MovieDetailView: View {
         }
         .frame(width: 640, height: 580)
         .task {
-            async let details: () = {
-                if movie.mediaType == .series {
-                    seriesDetails = try? await TMDBService.shared.fetchSeriesDetails(seriesId: movie.id)
-                } else {
-                    movieDetails = try? await TMDBService.shared.fetchMovieDetails(movieId: movie.id)
-                }
-            }()
-            async let trailer: () = {
-                trailerKey = await TMDBService.shared.fetchTrailerKey(
-                    id: movie.id, isTV: movie.mediaType == .series
-                )
-            }()
-            _ = await (details, trailer)
+            if movie.mediaType == .series {
+                seriesDetails = try? await TMDBService.shared.fetchSeriesDetails(seriesId: movie.id)
+            } else {
+                movieDetails = try? await TMDBService.shared.fetchMovieDetails(movieId: movie.id)
+            }
+            trailerKey = await TMDBService.shared.fetchTrailerKey(
+                id: movie.id, isTV: movie.mediaType == .series
+            )
             isLoading = false
         }
     }

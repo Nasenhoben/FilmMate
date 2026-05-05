@@ -91,18 +91,18 @@ final class MovieViewModel: ObservableObject {
 
         do {
             // Phase 1: Filme (0% → 45%)
-            let movies = try await TMDBService.shared.fetchMoviesWithProviders { @Sendable [weak self] progress, status in
-                Task { @MainActor [weak self] in
-                    self?.updateProgress = progress * 0.45
-                    self?.updateStatusText = status
+            let movies = try await TMDBService.shared.fetchMoviesWithProviders { progress, status in
+                Task { @MainActor in
+                    self.updateProgress = progress * 0.45
+                    self.updateStatusText = status
                 }
             }
 
             // Phase 2: Serien (45% → 90%)
-            let series = try await TMDBService.shared.fetchSeriesWithProviders { @Sendable [weak self] progress, status in
-                Task { @MainActor [weak self] in
-                    self?.updateProgress = 0.45 + progress * 0.45
-                    self?.updateStatusText = status
+            let series = try await TMDBService.shared.fetchSeriesWithProviders { progress, status in
+                Task { @MainActor in
+                    self.updateProgress = 0.45 + progress * 0.45
+                    self.updateStatusText = status
                 }
             }
 
