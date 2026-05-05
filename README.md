@@ -8,11 +8,11 @@ Eine native macOS-App, die Filmvorschläge basierend auf deinen Streaming-Dienst
 
 ## Features
 
-- **6 Filmvorschläge** — Zufällige Vorschläge aus der gefilterten Filmliste, in einem 3×2-Raster dargestellt
+- **8 Filmvorschläge** — Zufällige Vorschläge aus der gefilterten Filmliste, in einem Raster dargestellt
 - **Streaming-Anbieter** — Filterung nach Netflix, Amazon Prime, Disney+, HBO Max und Paramount+
 - **Bewertungsfilter** — Mindestbewertung: Alle / 6+ / 7+ / 8+
 - **Laufzeitfilter** — < 90 min / 90–120 min / 120+
-- **13 Genres** — Action, Abenteuer, Animation, Komödie, Krimi, Dokumentation, Drama, Familie, Fantasy, Horror, Romantik, Sci-Fi, Thriller
+- **10 Genres** — Action, Animation, Komödie, Krimi, Drama, Fantasy, Horror, Romantik, Sci-Fi, Thriller
 - **Film-Detailansicht** — Poster, Bewertung, Laufzeit, Regisseur, Besetzung, Genres und Streaming-Anbieter auf einen Blick
 - **Laufzeit on-demand** — Fehlende Laufzeiten werden automatisch beim Anzeigen der Karte von der TMDB API nachgeladen und lokal gespeichert
 - **Watchlist** — Filme speichern und zwischen Sessions erhalten
@@ -69,7 +69,7 @@ Sources/FilmMate/
 │   ├── TMDBService.swift        # TMDB API-Client (Swift actor)
 │   ├── DatabaseService.swift    # Lokale Filmdatenbank + Filterlogik
 │   ├── WatchlistService.swift   # Watchlist-Persistenz
-│   └── KeychainService.swift    # API-Key-Speicherung
+│   └── KeychainService.swift    # Sichere API-Key-Speicherung
 ├── ViewModels/
 │   ├── MovieViewModel.swift     # Hauptlogik: Filter, Vorschläge
 │   └── SettingsViewModel.swift  # Einstellungen + API-Key-Validierung
@@ -84,15 +84,16 @@ Sources/FilmMate/
 
 ## So funktioniert es
 
-1. **Datenbank-Download** — Die App ruft `/discover/movie` von TMDB ab, gefiltert nach Streaming-Anbieter für den deutschen Markt (`watch_region=DE`). Pro Anbieter werden zwei Durchläufe gemacht:
-   - 800 Filme sortiert nach Bewertung (`vote_average.desc`)
-   - 200 Filme sortiert nach Erscheinungsdatum (`primary_release_date.desc`)
+1. **Datenbank-Download** — Die App ruft `/discover/movie` und `/discover/tv` von TMDB ab, gefiltert nach Streaming-Anbieter für den deutschen Markt (`watch_region=DE`). Pro Anbieter werden mehrere Durchläufe gemacht:
+   - Titel sortiert nach Bewertung (`vote_average.desc`)
+   - Titel sortiert nach Erscheinungsdatum (`primary_release_date.desc` / `first_air_date.desc`)
+   - Titel sortiert nach Popularität (`popularity.desc`)
 
    So enthält die Datenbank sowohl Klassiker als auch neue Releases. Duplikate werden automatisch zusammengeführt.
 
 2. **Filterung** — Ein Film muss alle aktiven Filter erfüllen: mindestens ein passendes Genre, mindestens ein ausgewählter Anbieter, Mindestbewertung und Laufzeit.
 
-3. **Vorschläge** — 6 Filme werden zufällig aus der gefilterten Menge gewählt. Bereits gezeigte Filme werden in der nächsten Runde vermieden.
+3. **Vorschläge** — 8 Titel werden zufällig aus der gefilterten Menge gewählt. Bereits gezeigte Filme und Serien werden in der nächsten Runde vermieden.
 
 4. **Laufzeit** — Fehlende Laufzeiten werden beim ersten Anzeigen einer Filmkarte automatisch von der API nachgeladen und dauerhaft in der lokalen Datenbank gespeichert.
 

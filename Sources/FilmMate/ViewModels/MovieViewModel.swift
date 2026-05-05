@@ -49,7 +49,7 @@ final class MovieViewModel: ObservableObject {
 
     func setMediaType(_ type: MediaTypeFilter) {
         if type == .movies {
-            selectedProviders.removeAll { $0.isSeriesOnly }
+            selectedProviders = selectedProviders.filter { !$0.isSeriesOnly }
         }
         mediaTypeFilter = type
         suggestedMovies = []
@@ -67,8 +67,8 @@ final class MovieViewModel: ObservableObject {
 
     func suggestRandom() {
         guard filteredCount > 0 else { return }
-        let previous = Set(suggestedMovies.map(\.id))
-        var pool = filteredMovies.filter { !previous.contains($0.id) }
+        let previous = Set(suggestedMovies.map(\.identityKey))
+        var pool = filteredMovies.filter { !previous.contains($0.identityKey) }
         if pool.count < 8 { pool = filteredMovies }
         suggestedMovies = Array(pool.shuffled().prefix(8))
     }

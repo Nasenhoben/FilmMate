@@ -18,7 +18,7 @@ struct MovieSuggestionCard: View {
         .onAppear {
             withAnimation(.spring(duration: 0.45, bounce: 0.1)) { appeared = true }
         }
-        .id(movie.id)
+        .id(movie.identityKey)
     }
 
     // MARK: Backdrop hero

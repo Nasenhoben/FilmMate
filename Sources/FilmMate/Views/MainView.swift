@@ -299,7 +299,7 @@ struct WelcomeView: View {
     }
 }
 
-// MARK: - 5-card suggestion view
+// MARK: - Suggestion grid
 
 struct SuggestedMovieView: View {
     @ObservedObject var vm: MovieViewModel
@@ -331,19 +331,19 @@ struct SuggestedMovieView: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(Array(vm.suggestedMovies.enumerated()), id: \.element.id) { index, movie in
+                    ForEach(Array(vm.suggestedMovies.enumerated()), id: \.element.identityKey) { index, movie in
                         MovieGridCard(movie: movie)
                             .animation(
                                 Animation.spring(duration: 0.38, bounce: 0.08)
                                     .delay(Double(index) * 0.055),
-                                value: vm.suggestedMovies.map(\.id)
+                                value: vm.suggestedMovies.map(\.identityKey)
                             )
                     }
                 }
                 .padding(.horizontal, 12)
                 .padding(.bottom, 16)
             }
-            .animation(Animation.spring(duration: 0.35), value: vm.suggestedMovies.map(\.id))
+            .animation(Animation.spring(duration: 0.35), value: vm.suggestedMovies.map(\.identityKey))
         }
     }
 }

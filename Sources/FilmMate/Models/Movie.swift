@@ -72,6 +72,10 @@ struct Movie: Identifiable, Codable, Equatable {
         Genre.from(tmdbIds: genreIds)
     }
 
+    var identityKey: String {
+        "\(mediaType.rawValue)-\(id)"
+    }
+
     var posterURL: URL? {
         guard let path = posterPath else { return nil }
         return URL(string: "https://image.tmdb.org/t/p/w342\(path)")

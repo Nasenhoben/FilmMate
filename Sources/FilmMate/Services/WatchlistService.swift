@@ -18,7 +18,7 @@ final class WatchlistService: ObservableObject {
     // MARK: - Public API
 
     func contains(_ movie: Movie) -> Bool {
-        movies.contains { $0.id == movie.id }
+        movies.contains { $0.identityKey == movie.identityKey }
     }
 
     func toggle(_ movie: Movie) {
@@ -32,7 +32,7 @@ final class WatchlistService: ObservableObject {
     }
 
     func remove(_ movie: Movie) {
-        movies.removeAll { $0.id == movie.id }
+        movies.removeAll { $0.identityKey == movie.identityKey }
         save()
     }
 

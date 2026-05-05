@@ -16,13 +16,13 @@ struct WatchlistOverviewView: View {
                         LazyVGrid(columns: columns, spacing: 10) {
                             ForEach(
                                 Array(watchlist.movies.enumerated()),
-                                id: \.element.id
+                                id: \.element.identityKey
                             ) { index, movie in
                                 MovieGridCard(movie: movie)
                                     .animation(
                                         Animation.spring(duration: 0.38, bounce: 0.08)
                                             .delay(Double(index) * 0.04),
-                                        value: watchlist.movies.map(\.id)
+                                        value: watchlist.movies.map(\.identityKey)
                                     )
                             }
                         }
