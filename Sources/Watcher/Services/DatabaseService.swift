@@ -8,15 +8,11 @@ final class DatabaseService: ObservableObject {
     @Published private(set) var lastUpdated: Date?
 
     private let storageURL: URL = {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let dir = appSupport.appendingPathComponent("FilmMate", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir.appendingPathComponent("movies.json")
+        AppDirectories.applicationSupportDirectory().appendingPathComponent("movies.json")
     }()
 
     private let metaURL: URL = {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return appSupport.appendingPathComponent("FilmMate/meta.json")
+        AppDirectories.applicationSupportDirectory().appendingPathComponent("meta.json")
     }()
 
     private init() {

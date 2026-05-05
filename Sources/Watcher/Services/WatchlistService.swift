@@ -7,10 +7,7 @@ final class WatchlistService: ObservableObject {
     @Published private(set) var movies: [Movie] = []
 
     private let storageURL: URL = {
-        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
-            .first!.appendingPathComponent("FilmMate", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir.appendingPathComponent("watchlist.json")
+        AppDirectories.applicationSupportDirectory().appendingPathComponent("watchlist.json")
     }()
 
     private init() { load() }

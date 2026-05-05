@@ -1,4 +1,4 @@
-# FilmMate
+# Watcher
 
 Eine native macOS-App, die Filmvorschläge basierend auf deinen Streaming-Diensten und Genre-Präferenzen liefert – gebaut mit SwiftUI.
 
@@ -9,7 +9,7 @@ Eine native macOS-App, die Filmvorschläge basierend auf deinen Streaming-Dienst
 ## Features
 
 - **8 Filmvorschläge** — Zufällige Vorschläge aus der gefilterten Filmliste, in einem Raster dargestellt
-- **Streaming-Anbieter** — Filterung nach Netflix, Amazon Prime, Disney+, HBO Max und Paramount+
+- **Streaming-Anbieter** — Filterung nach Netflix, Amazon Prime Video, Disney+, Paramount+, HBO Max und Crunchyroll
 - **Bewertungsfilter** — Mindestbewertung: Alle / 6+ / 7+ / 8+
 - **Laufzeitfilter** — < 90 min / 90–120 min / 120+
 - **10 Genres** — Action, Animation, Komödie, Krimi, Drama, Fantasy, Horror, Romantik, Sci-Fi, Thriller
@@ -30,8 +30,8 @@ Eine native macOS-App, die Filmvorschläge basierend auf deinen Streaming-Dienst
 ### 1. Repository klonen
 
 ```bash
-git clone https://github.com/Nasenhoben/FilmMate.git
-cd FilmMate
+git clone https://github.com/Nasenhoben/Watcher.git
+cd Watcher
 ```
 
 ### 2. Xcode-Projekt generieren
@@ -46,7 +46,7 @@ xcodegen generate
 ### 3. In Xcode öffnen
 
 ```bash
-open FilmMate.xcodeproj
+open Watcher.xcodeproj
 ```
 
 ### 4. TMDB API-Key eintragen
@@ -59,7 +59,7 @@ open FilmMate.xcodeproj
 ## Architektur
 
 ```
-Sources/FilmMate/
+Sources/Watcher/
 ├── Models/
 │   ├── Movie.swift              # Film-Model + TMDB API-Typen
 │   ├── Genre.swift              # Genre-Enum mit TMDB-IDs, Farben, Emojis
