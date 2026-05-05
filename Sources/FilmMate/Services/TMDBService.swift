@@ -5,10 +5,10 @@ actor TMDBService {
 
     private let baseURL = "https://api.themoviedb.org/3"
     private let minimumVotes = 20
-    private let pagesPerRatingSort    = 500  // 500 × 20 = 10.000 top-bewertete Filme pro Anbieter
-    private let pagesPerDateSort      = 500  // 500 × 20 = 10.000 neueste Filme pro Anbieter
-    private let pagesPerPopularSort   = 500  // 500 × 20 = 10.000 populärste Filme pro Anbieter
-    private let maxConcurrentRequests = 5    // parallele Requests
+    private let pagesPerRatingSort    = 15   // 15 × 20 = 300 top-bewertete Titel pro Anbieter
+    private let pagesPerDateSort      = 15   // 15 × 20 = 300 neueste Titel pro Anbieter
+    private let pagesPerPopularSort   = 15   // 15 × 20 = 300 populärste Titel pro Anbieter
+    private let maxConcurrentRequests = 2    // parallele Requests
 
     private var apiKey: String {
         KeychainService.shared.retrieve() ?? ""
@@ -23,7 +23,7 @@ actor TMDBService {
         components.queryItems = [URLQueryItem(name: "api_key", value: trimmedKey)]
         guard let url = components.url else { return false }
         do {
-            let (_, response) = try await URLSession.shared.data(from: url)
+            let (_, response) = try await fetchData(from: url)
             return (response as? HTTPURLResponse)?.statusCode == 200
         } catch {
             return false
@@ -64,30 +64,21 @@ actor TMDBService {
             }
         }
 
-        try await withThrowingTaskGroup(of: [(TMDBMovie, StreamingProvider)].self) { group in
-            for provider in providers {
-                group.addTask {
-                    try await self.fetchAllPages(for: provider, sortBy: "vote_average.desc",
-                                                 pages: self.pagesPerRatingSort, counter: counter)
-                }
-                group.addTask {
-                    try await self.fetchAllPages(for: provider, sortBy: "primary_release_date.desc",
-                                                 pages: self.pagesPerDateSort, counter: counter)
-                }
-                group.addTask {
-                    try await self.fetchAllPages(for: provider, sortBy: "popularity.desc",
-                                                 pages: self.pagesPerPopularSort, counter: counter)
-                }
-            }
-            for try await results in group { merge(results) }
+        for provider in providers {
+            merge(try await fetchAllPages(for: provider, sortBy: "vote_average.desc",
+                                          pages: pagesPerRatingSort, counter: counter))
+            merge(try await fetchAllPages(for: provider, sortBy: "primary_release_date.desc",
+                                          pages: pagesPerDateSort, counter: counter))
+            merge(try await fetchAllPages(for: provider, sortBy: "popularity.desc",
+                                          pages: pagesPerPopularSort, counter: counter))
         }
 
         let sorted = Array(movieMap.values).sorted { $0.voteAverage > $1.voteAverage }
 
-        // Phase 2: Laufzeiten für die Top-2000 Filme nachladen
-        let top500Ids = Array(sorted.prefix(2000).map(\.id))
+        // Phase 2: Laufzeiten für die Top-Titel nachladen. Weitere Titel laden on-demand.
+        let topRuntimeIds = Array(sorted.prefix(500).map(\.id))
         await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
-        let runtimes = await fetchRuntimes(for: top500Ids)
+        let runtimes = await fetchRuntimes(for: topRuntimeIds)
 
         let movies = sorted.map { movie -> Movie in
             var m = movie
@@ -136,8 +127,7 @@ actor TMDBService {
                 }
             }
 
-            // Brief pause between batches to stay within TMDB rate limit (~40 req/s)
-            try await Task.sleep(nanoseconds: 150_000_000)
+            try await Task.sleep(nanoseconds: 350_000_000)
         }
 
         return results
@@ -157,7 +147,7 @@ actor TMDBService {
             URLQueryItem(name: "page",                 value: "\(page)")
         ]
 
-        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        let (data, response) = try await fetchData(from: components.url!)
         if isPageLimitResponse(data: data, response: response) {
             return TMDBMovieResponse(results: [], totalPages: max(page - 1, 1), totalResults: 0)
         }
@@ -177,9 +167,9 @@ actor TMDBService {
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_series")) }
 
         let providers = StreamingProvider.allCases
-        let seriesPagesRating  = 500
-        let seriesPagesDate    = 500
-        let seriesPagesPopular = 500
+        let seriesPagesRating  = 15
+        let seriesPagesDate    = 15
+        let seriesPagesPopular = 15
         let totalUnits = Double(providers.count * (seriesPagesRating + seriesPagesDate + seriesPagesPopular))
         let counter = ProgressCounter(total: totalUnits, callback: progressCallback)
 
@@ -198,30 +188,21 @@ actor TMDBService {
             }
         }
 
-        try await withThrowingTaskGroup(of: [(TMDBTVShow, StreamingProvider)].self) { group in
-            for provider in providers {
-                group.addTask {
-                    try await self.fetchAllTVPages(for: provider, sortBy: "vote_average.desc",
-                                                   pages: seriesPagesRating, counter: counter)
-                }
-                group.addTask {
-                    try await self.fetchAllTVPages(for: provider, sortBy: "first_air_date.desc",
-                                                   pages: seriesPagesDate, counter: counter)
-                }
-                group.addTask {
-                    try await self.fetchAllTVPages(for: provider, sortBy: "popularity.desc",
-                                                   pages: seriesPagesPopular, counter: counter)
-                }
-            }
-            for try await results in group { merge(results) }
+        for provider in providers {
+            merge(try await fetchAllTVPages(for: provider, sortBy: "vote_average.desc",
+                                            pages: seriesPagesRating, counter: counter))
+            merge(try await fetchAllTVPages(for: provider, sortBy: "first_air_date.desc",
+                                            pages: seriesPagesDate, counter: counter))
+            merge(try await fetchAllTVPages(for: provider, sortBy: "popularity.desc",
+                                            pages: seriesPagesPopular, counter: counter))
         }
 
         let sorted = Array(seriesMap.values).sorted { $0.voteAverage > $1.voteAverage }
 
-        // Fetch episode runtimes for top 1000 series
-        let top200Ids = Array(sorted.prefix(1000).map(\.id))
+        // Fetch episode runtimes for top series; more details load on demand.
+        let topRuntimeIds = Array(sorted.prefix(250).map(\.id))
         await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
-        let runtimes = await fetchEpisodeRuntimes(for: top200Ids)
+        let runtimes = await fetchEpisodeRuntimes(for: topRuntimeIds)
 
         let series = sorted.map { s -> Movie in
             var m = s
@@ -262,7 +243,7 @@ actor TMDBService {
                     await counter.increment(by: 1)
                 }
             }
-            try await Task.sleep(nanoseconds: 150_000_000)
+            try await Task.sleep(nanoseconds: 350_000_000)
         }
         return results
     }
@@ -279,7 +260,7 @@ actor TMDBService {
             URLQueryItem(name: "page",                 value: "\(page)")
         ]
 
-        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        let (data, response) = try await fetchData(from: components.url!)
         if isPageLimitResponse(data: data, response: response) {
             return TMDBTVResponse(results: [], totalPages: max(page - 1, 1), totalResults: 0)
         }
@@ -297,7 +278,7 @@ actor TMDBService {
             URLQueryItem(name: "language",           value: language),
             URLQueryItem(name: "append_to_response", value: "credits")
         ]
-        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        let (data, response) = try await fetchData(from: components.url!)
         try validate(response: response, data: data)
         return try JSONDecoder().decode(TMDBSeriesDetailResponse.self, from: data)
     }
@@ -326,7 +307,7 @@ actor TMDBService {
                             URLQueryItem(name: "language", value: lang)
                         ]
                         let runtime: Int? = try? await {
-                            let (data, _) = try await URLSession.shared.data(from: components.url!)
+                            let (data, _) = try await self.fetchData(from: components.url!)
                             let decoded = try JSONDecoder().decode(R.self, from: data)
                             guard let times = decoded.episodeRunTime, !times.isEmpty else { return nil }
                             return times.reduce(0, +) / times.count
@@ -338,7 +319,7 @@ actor TMDBService {
                     if let runtime { runtimeMap[id] = runtime }
                 }
             }
-            try? await Task.sleep(nanoseconds: 150_000_000)
+            try? await Task.sleep(nanoseconds: 350_000_000)
         }
         return runtimeMap
     }
@@ -353,7 +334,7 @@ actor TMDBService {
             URLQueryItem(name: "language",            value: language),
             URLQueryItem(name: "append_to_response",  value: "credits")
         ]
-        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        let (data, response) = try await fetchData(from: components.url!)
         try validate(response: response, data: data)
         return try JSONDecoder().decode(TMDBMovieDetailResponse.self, from: data)
     }
@@ -376,7 +357,7 @@ actor TMDBService {
                     if let runtime { runtimeMap[id] = runtime }
                 }
             }
-            try? await Task.sleep(nanoseconds: 150_000_000)
+            try? await Task.sleep(nanoseconds: 350_000_000)
         }
         return runtimeMap
     }
@@ -402,7 +383,7 @@ actor TMDBService {
             URLQueryItem(name: "language", value: lang)
         ]
         guard let url = components.url,
-              let (data, response) = try? await URLSession.shared.data(from: url),
+              let (data, response) = try? await fetchData(from: url),
               (response as? HTTPURLResponse)?.statusCode == 200
         else { return nil }
 
@@ -425,7 +406,7 @@ actor TMDBService {
             URLQueryItem(name: "api_key",  value: apiKey),
             URLQueryItem(name: "language", value: language)
         ]
-        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        let (data, response) = try await fetchData(from: components.url!)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
         struct R: Codable { let runtime: Int? }
         return (try? JSONDecoder().decode(R.self, from: data))?.runtime
@@ -441,6 +422,27 @@ actor TMDBService {
                 throw TMDBError.invalidAPIKey
             }
             throw TMDBError.invalidResponse(statusCode: httpResponse.statusCode, message: message)
+        }
+    }
+
+    private func fetchData(from url: URL) async throws -> (Data, URLResponse) {
+        var attempt = 0
+
+        while true {
+            let (data, response) = try await URLSession.shared.data(from: url)
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 429,
+                  attempt < 6
+            else {
+                return (data, response)
+            }
+
+            attempt += 1
+            let retryAfter = httpResponse.value(forHTTPHeaderField: "Retry-After")
+                .flatMap(Double.init) ?? Double(attempt * 2)
+            let delay = min(max(retryAfter, 1), 20)
+            try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
     }
 
