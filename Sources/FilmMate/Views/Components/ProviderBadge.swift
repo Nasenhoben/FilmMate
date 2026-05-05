@@ -57,6 +57,19 @@ extension StreamingProvider {
         case .hboMax:        return "HBO"
         case .paramountPlus: return "P+"
         case .crunchyroll:   return "CR"
+        case .appleTVPlus:   return "TV+"
+        case .sky:           return "SK"
+        case .joyn:          return "J"
+        case .rtlPlus:       return "R+"
+        case .magentaTV:     return "MT"
+        case .wow:           return "W"
+        case .plutoTV:       return "PL"
+        case .rakutenTV:     return "RT"
+        case .ard:           return "A"
+        case .zdf:           return "Z"
+        case .arte:          return "ar"
+        case .netzkino:      return "NK"
+        case .maxdome:       return "MX"
         }
     }
 }
