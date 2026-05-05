@@ -69,6 +69,7 @@
 /* Errors */
 "error.title" = "Fehler";
 "error.missing_api_key" = "Kein API-Key hinterlegt. Bitte in den Einstellungen eintragen.";
+"error.invalid_api_key" = "Der TMDB API-Key ist ungültig. Bitte verwende den API-Key (v3 auth), nicht den v4 Read Access Token.";
 "error.invalid_response" = "Ungültige Serverantwort.";
 "error.decoding_error" = "Fehler beim Verarbeiten der Daten.";
 

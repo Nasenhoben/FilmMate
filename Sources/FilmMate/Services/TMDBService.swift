@@ -17,8 +17,10 @@ actor TMDBService {
     // MARK: - API key validation
 
     func validateAPIKey(_ key: String) async -> Bool {
+        let trimmedKey = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedKey.isEmpty else { return false }
         var components = URLComponents(string: "\(baseURL)/authentication")!
-        components.queryItems = [URLQueryItem(name: "api_key", value: key)]
+        components.queryItems = [URLQueryItem(name: "api_key", value: trimmedKey)]
         guard let url = components.url else { return false }
         do {
             let (_, response) = try await URLSession.shared.data(from: url)
@@ -38,6 +40,7 @@ actor TMDBService {
         progressCallback: @escaping @Sendable (Double, String) -> Void
     ) async throws -> [Movie] {
         guard !apiKey.isEmpty else { throw TMDBError.missingAPIKey }
+        guard await validateAPIKey(apiKey) else { throw TMDBError.invalidAPIKey }
 
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_movies")) }
 
@@ -155,9 +158,10 @@ actor TMDBService {
         ]
 
         let (data, response) = try await URLSession.shared.data(from: components.url!)
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-            throw TMDBError.invalidResponse
+        if isPageLimitResponse(data: data, response: response) {
+            return TMDBMovieResponse(results: [], totalPages: max(page - 1, 1), totalResults: 0)
         }
+        try validate(response: response, data: data)
 
         return try JSONDecoder().decode(TMDBMovieResponse.self, from: data)
     }
@@ -168,6 +172,7 @@ actor TMDBService {
         progressCallback: @escaping @Sendable (Double, String) -> Void
     ) async throws -> [Movie] {
         guard !apiKey.isEmpty else { throw TMDBError.missingAPIKey }
+        guard await validateAPIKey(apiKey) else { throw TMDBError.invalidAPIKey }
 
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_series")) }
 
@@ -275,9 +280,10 @@ actor TMDBService {
         ]
 
         let (data, response) = try await URLSession.shared.data(from: components.url!)
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-            throw TMDBError.invalidResponse
+        if isPageLimitResponse(data: data, response: response) {
+            return TMDBTVResponse(results: [], totalPages: max(page - 1, 1), totalResults: 0)
         }
+        try validate(response: response, data: data)
         return try JSONDecoder().decode(TMDBTVResponse.self, from: data)
     }
 
@@ -292,9 +298,7 @@ actor TMDBService {
             URLQueryItem(name: "append_to_response", value: "credits")
         ]
         let (data, response) = try await URLSession.shared.data(from: components.url!)
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-            throw TMDBError.invalidResponse
-        }
+        try validate(response: response, data: data)
         return try JSONDecoder().decode(TMDBSeriesDetailResponse.self, from: data)
     }
 
@@ -350,9 +354,7 @@ actor TMDBService {
             URLQueryItem(name: "append_to_response",  value: "credits")
         ]
         let (data, response) = try await URLSession.shared.data(from: components.url!)
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-            throw TMDBError.invalidResponse
-        }
+        try validate(response: response, data: data)
         return try JSONDecoder().decode(TMDBMovieDetailResponse.self, from: data)
     }
 
@@ -428,6 +430,34 @@ actor TMDBService {
         struct R: Codable { let runtime: Int? }
         return (try? JSONDecoder().decode(R.self, from: data))?.runtime
     }
+
+    private func validate(response: URLResponse, data: Data) throws {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw TMDBError.invalidResponse(statusCode: nil, message: nil)
+        }
+        guard httpResponse.statusCode == 200 else {
+            let message = try? JSONDecoder().decode(TMDBAPIErrorResponse.self, from: data).statusMessage
+            if httpResponse.statusCode == 401 {
+                throw TMDBError.invalidAPIKey
+            }
+            throw TMDBError.invalidResponse(statusCode: httpResponse.statusCode, message: message)
+        }
+    }
+
+    private func isPageLimitResponse(data: Data, response: URLResponse) -> Bool {
+        guard (response as? HTTPURLResponse)?.statusCode == 422,
+              let message = try? JSONDecoder().decode(TMDBAPIErrorResponse.self, from: data).statusMessage
+        else { return false }
+        return message.localizedCaseInsensitiveContains("page")
+    }
+}
+
+private struct TMDBAPIErrorResponse: Codable {
+    let statusMessage: String
+
+    enum CodingKeys: String, CodingKey {
+        case statusMessage = "status_message"
+    }
 }
 
 // MARK: - Thread-safe progress counter
@@ -456,13 +486,21 @@ private actor ProgressCounter {
 
 enum TMDBError: LocalizedError {
     case missingAPIKey
-    case invalidResponse
+    case invalidAPIKey
+    case invalidResponse(statusCode: Int?, message: String?)
     case decodingError
 
     var errorDescription: String? {
         switch self {
         case .missingAPIKey:   return String(localized: "error.missing_api_key")
-        case .invalidResponse: return String(localized: "error.invalid_response")
+        case .invalidAPIKey:   return String(localized: "error.invalid_api_key")
+        case .invalidResponse(let statusCode, let message):
+            let fallback = String(localized: "error.invalid_response")
+            guard let statusCode else { return fallback }
+            if let message, !message.isEmpty {
+                return "\(fallback) (HTTP \(statusCode): \(message))"
+            }
+            return "\(fallback) (HTTP \(statusCode))"
         case .decodingError:   return String(localized: "error.decoding_error")
         }
     }
