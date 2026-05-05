@@ -90,6 +90,10 @@ final class MovieViewModel: ObservableObject {
         updateComplete = false
 
         do {
+            let cachedRuntimeByIdentity = db.movies.reduce(into: [String: (runtime: Int?, episodeRuntime: Int?)]()) { cache, movie in
+                cache[movie.identityKey] = (movie.runtime, movie.episodeRuntime)
+            }
+
             let progressCallback: @Sendable (Double, String) -> Void = { progress, status in
                 Task { @MainActor in
                     self.updateProgress = progress * 0.45
@@ -106,12 +110,21 @@ final class MovieViewModel: ObservableObject {
             }
             let series = try await TMDBService.shared.fetchSeriesWithProviders(progressCallback: seriesCallback)
 
+            let refreshedItems = (movies + series).map { item -> Movie in
+                var updated = item
+                if let cached = cachedRuntimeByIdentity[item.identityKey] {
+                    updated.runtime = updated.runtime ?? cached.runtime
+                    updated.episodeRuntime = updated.episodeRuntime ?? cached.episodeRuntime
+                }
+                return updated
+            }
+
             // Phase 3: Speichern (90% → 100%)
             await MainActor.run {
                 self.updateProgress = 0.99
                 self.updateStatusText = String(localized: "progress.done")
             }
-            db.save(movies + series)
+            db.save(refreshedItems)
             updateComplete = true
             isUpdating = false
         } catch {

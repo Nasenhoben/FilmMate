@@ -121,7 +121,6 @@
 "detail.created_by" = "Erstellt von";
 
 /* Fortschritt */
-"progress.fetching_runtimes" = "Laufzeiten werden geladen…";
 
 /* Extra */
 "welcome.no_results" = "Keine Ergebnisse für diese Kombination. Filter anpassen.";

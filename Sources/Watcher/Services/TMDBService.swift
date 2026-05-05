@@ -73,21 +73,8 @@ actor TMDBService {
                                           pages: pagesPerPopularSort, counter: counter))
         }
 
-        let sorted = Array(movieMap.values).sorted { $0.voteAverage > $1.voteAverage }
-
-        // Phase 2: Laufzeiten für die Top-Titel nachladen. Weitere Titel laden on-demand.
-        let topRuntimeIds = Array(sorted.prefix(500).map(\.id))
-        await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
-        let runtimes = await fetchRuntimes(for: topRuntimeIds)
-
-        let movies = sorted.map { movie -> Movie in
-            var m = movie
-            m.runtime = runtimes[movie.id]
-            return m
-        }
-
         await MainActor.run { progressCallback(1.0, String(localized: "progress.done")) }
-        return movies
+        return Array(movieMap.values).sorted { $0.voteAverage > $1.voteAverage }
     }
 
     // MARK: - Fetch all pages for one provider
@@ -197,21 +184,8 @@ actor TMDBService {
                                             pages: seriesPagesPopular, counter: counter))
         }
 
-        let sorted = Array(seriesMap.values).sorted { $0.voteAverage > $1.voteAverage }
-
-        // Fetch episode runtimes for top series; more details load on demand.
-        let topRuntimeIds = Array(sorted.prefix(250).map(\.id))
-        await MainActor.run { progressCallback(0.99, String(localized: "progress.fetching_runtimes")) }
-        let runtimes = await fetchEpisodeRuntimes(for: topRuntimeIds)
-
-        let series = sorted.map { s -> Movie in
-            var m = s
-            m.episodeRuntime = runtimes[s.id]
-            return m
-        }
-
         await MainActor.run { progressCallback(1.0, String(localized: "progress.done")) }
-        return series
+        return Array(seriesMap.values).sorted { $0.voteAverage > $1.voteAverage }
     }
 
     private func fetchAllTVPages(
@@ -283,47 +257,6 @@ actor TMDBService {
         return try JSONDecoder().decode(TMDBSeriesDetailResponse.self, from: data)
     }
 
-    private func fetchEpisodeRuntimes(for seriesIds: [Int]) async -> [Int: Int] {
-        var runtimeMap: [Int: Int] = [:]
-        let batches = stride(from: 0, to: seriesIds.count, by: maxConcurrentRequests)
-        let key = apiKey
-        let lang = language
-        let base = baseURL
-
-        for batchStart in batches {
-            let batchEnd = min(batchStart + maxConcurrentRequests, seriesIds.count)
-            let batch = Array(seriesIds[batchStart..<batchEnd])
-
-            await withTaskGroup(of: (Int, Int?).self) { group in
-                for id in batch {
-                    group.addTask {
-                        struct R: Codable {
-                            let episodeRunTime: [Int]?
-                            enum CodingKeys: String, CodingKey { case episodeRunTime = "episode_run_time" }
-                        }
-                        var components = URLComponents(string: "\(base)/tv/\(id)")!
-                        components.queryItems = [
-                            URLQueryItem(name: "api_key", value: key),
-                            URLQueryItem(name: "language", value: lang)
-                        ]
-                        let runtime: Int? = try? await {
-                            let (data, _) = try await self.fetchData(from: components.url!)
-                            let decoded = try JSONDecoder().decode(R.self, from: data)
-                            guard let times = decoded.episodeRunTime, !times.isEmpty else { return nil }
-                            return times.reduce(0, +) / times.count
-                        }()
-                        return (id, runtime)
-                    }
-                }
-                for await (id, runtime) in group {
-                    if let runtime { runtimeMap[id] = runtime }
-                }
-            }
-            try? await Task.sleep(nanoseconds: 350_000_000)
-        }
-        return runtimeMap
-    }
-
     // MARK: - Film-Details (Besetzung, Regisseur, Laufzeit)
 
     func fetchMovieDetails(movieId: Int) async throws -> TMDBMovieDetailResponse {
@@ -337,29 +270,6 @@ actor TMDBService {
         let (data, response) = try await fetchData(from: components.url!)
         try validate(response: response, data: data)
         return try JSONDecoder().decode(TMDBMovieDetailResponse.self, from: data)
-    }
-
-    // MARK: - Laufzeit-Batch-Fetch
-
-    private func fetchRuntimes(for movieIds: [Int]) async -> [Int: Int] {
-        var runtimeMap: [Int: Int] = [:]
-        let batches = stride(from: 0, to: movieIds.count, by: maxConcurrentRequests)
-
-        for batchStart in batches {
-            let batchEnd = min(batchStart + maxConcurrentRequests, movieIds.count)
-            let batch = Array(movieIds[batchStart..<batchEnd])
-
-            await withTaskGroup(of: (Int, Int?).self) { group in
-                for id in batch {
-                    group.addTask { (id, try? await self.fetchRuntimeOnly(movieId: id)) }
-                }
-                for await (id, runtime) in group {
-                    if let runtime { runtimeMap[id] = runtime }
-                }
-            }
-            try? await Task.sleep(nanoseconds: 350_000_000)
-        }
-        return runtimeMap
     }
 
     func fetchRuntime(movieId: Int) async throws -> Int? {
