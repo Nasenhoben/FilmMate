@@ -1,5 +1,19 @@
 import Foundation
 
+// MARK: - TMDB Response Protocol
+
+private protocol TMDBResponse: Decodable {
+    associatedtype Item: TMDBItem
+    var results: [Item] { get }
+    var totalPages: Int { get }
+    var totalResults: Int { get }
+}
+
+private protocol TMDBItem {
+    var id: Int { get }
+    func toMovie(providers: [StreamingProvider]) -> Movie
+}
+
 actor TMDBService {
     static let shared = TMDBService()
 

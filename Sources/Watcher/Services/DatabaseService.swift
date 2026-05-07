@@ -15,15 +15,41 @@ final class DatabaseService: ObservableObject {
         AppDirectories.applicationSupportDirectory().appendingPathComponent("meta.json")
     }()
 
+    enum Error: LocalizedError {
+        case movieNotFound
+        case encodingFailed(Swift.Error)
+        case writeFailed(Swift.Error)
+
+        var errorDescription: String? {
+            switch self {
+            case .movieNotFound:
+                return "Movie not found in database"
+            case .encodingFailed(let error):
+                return "Failed to encode movies: \(error.localizedDescription)"
+            case .writeFailed(let error):
+                return "Failed to write to disk: \(error.localizedDescription)"
+            }
+        }
+    }
+
     private init() {
         load()
     }
 
-    func updateRuntime(movieId: Int, runtime: Int) {
-        guard let idx = movies.firstIndex(where: { $0.id == movieId }) else { return }
+    func updateRuntime(movieId: Int, runtime: Int) -> Result<Void, Error> {
+        guard let idx = movies.firstIndex(where: { $0.id == movieId }) else {
+            return .failure(.movieNotFound)
+        }
+        
+        // Atomic read-modify-write: update published property and persist
         movies[idx].runtime = runtime
-        if let data = try? JSONEncoder().encode(movies) {
-            try? data.write(to: storageURL, options: .atomicWrite)
+        
+        do {
+            let data = try JSONEncoder().encode(movies)
+            try data.write(to: storageURL, options: .atomicWrite)
+            return .success(())
+        } catch {
+            return .failure(.writeFailed(error))
         }
     }
 

@@ -70,7 +70,13 @@ struct MovieGridCard: View {
         guard let minutes = try? await TMDBService.shared.fetchRuntime(movieId: movie.id),
               let formatted = Movie.formatRuntime(minutes) else { return }
         resolvedRuntime = formatted
-        DatabaseService.shared.updateRuntime(movieId: movie.id, runtime: minutes)
+        
+        switch DatabaseService.shared.updateRuntime(movieId: movie.id, runtime: minutes) {
+        case .success:
+            break
+        case .failure(let error):
+            print("Failed to update runtime for movie \(movie.id): \(error)")
+        }
     }
 
     // MARK: – Colored provider banner
