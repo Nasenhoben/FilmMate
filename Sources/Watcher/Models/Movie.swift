@@ -1,5 +1,19 @@
 import Foundation
 
+// MARK: - TMDB Response Protocol
+
+protocol TMDBResponse: Decodable {
+    associatedtype Item: TMDBItem
+    var results: [Item] { get }
+    var totalPages: Int { get }
+    var totalResults: Int { get }
+}
+
+protocol TMDBItem {
+    var id: Int { get }
+    func toMovie(providers: [StreamingProvider]) -> Movie
+}
+
 enum MediaType: String, Codable {
     case movie, series
 }
@@ -118,7 +132,8 @@ struct Movie: Identifiable, Codable, Equatable {
     }
 }
 
-// TMDB API response models
+// MARK: - TMDB API response models
+
 struct TMDBMovieResponse: Codable {
     let results: [TMDBMovie]
     let totalPages: Int
@@ -246,3 +261,17 @@ struct TMDBProvidersResponse: Codable {
         }
     }
 }
+
+// MARK: - Protocol Conformances
+
+extension TMDBMovieResponse: TMDBResponse {
+    typealias Item = TMDBMovie
+}
+
+extension TMDBMovie: TMDBItem {}
+
+extension TMDBTVResponse: TMDBResponse {
+    typealias Item = TMDBTVShow
+}
+
+extension TMDBTVShow: TMDBItem {}

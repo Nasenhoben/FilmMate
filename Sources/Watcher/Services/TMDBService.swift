@@ -1,19 +1,5 @@
 import Foundation
 
-// MARK: - TMDB Response Protocol
-
-private protocol TMDBResponse: Decodable {
-    associatedtype Item: TMDBItem
-    var results: [Item] { get }
-    var totalPages: Int { get }
-    var totalResults: Int { get }
-}
-
-private protocol TMDBItem {
-    var id: Int { get }
-    func toMovie(providers: [StreamingProvider]) -> Movie
-}
-
 actor TMDBService {
     static let shared = TMDBService()
 
@@ -48,7 +34,7 @@ actor TMDBService {
         UserDefaults.standard.string(forKey: "app_language") ?? "de-DE"
     }
 
-    // MARK: - Public entry point
+    // MARK: - Public entry points
 
     func fetchMoviesWithProviders(
         progressCallback: @escaping @Sendable (Double, String) -> Void
@@ -58,106 +44,19 @@ actor TMDBService {
 
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_movies")) }
 
-        let providers = StreamingProvider.allCases
-        let totalUnits = Double(providers.count * (pagesPerRatingSort + pagesPerDateSort + pagesPerPopularSort))
-        let counter = ProgressCounter(total: totalUnits, callback: progressCallback)
-
-        // Fetch all providers concurrently – three sort strategies
-        var movieMap: [Int: Movie] = [:]
-
-        func merge(_ results: [(TMDBMovie, StreamingProvider)]) {
-            for (tmdbMovie, provider) in results {
-                if var existing = movieMap[tmdbMovie.id] {
-                    if !existing.availableOn.contains(provider) {
-                        existing.availableOn.append(provider)
-                    }
-                    movieMap[tmdbMovie.id] = existing
-                } else {
-                    movieMap[tmdbMovie.id] = tmdbMovie.toMovie(providers: [provider])
-                }
+        let results = try await fetchWithProviders(
+            endpoint: "discover/movie",
+            dateSortField: "primary_release_date.desc",
+            progressCallback: progressCallback,
+            responseType: TMDBMovieResponse.self,
+            emptyResponseFactory: {
+                TMDBMovieResponse(results: [], totalPages: 0, totalResults: 0)
             }
-        }
-
-        for provider in providers {
-            merge(try await fetchAllPages(for: provider, sortBy: "vote_average.desc",
-                                          pages: pagesPerRatingSort, counter: counter))
-            merge(try await fetchAllPages(for: provider, sortBy: "primary_release_date.desc",
-                                          pages: pagesPerDateSort, counter: counter))
-            merge(try await fetchAllPages(for: provider, sortBy: "popularity.desc",
-                                          pages: pagesPerPopularSort, counter: counter))
-        }
+        )
 
         await MainActor.run { progressCallback(1.0, String(localized: "progress.done")) }
-        return Array(movieMap.values).sorted { $0.voteAverage > $1.voteAverage }
-    }
-
-    // MARK: - Fetch all pages for one provider
-
-    private func fetchAllPages(
-        for provider: StreamingProvider,
-        sortBy: String,
-        pages: Int,
-        counter: ProgressCounter
-    ) async throws -> [(TMDBMovie, StreamingProvider)] {
-        var results: [(TMDBMovie, StreamingProvider)] = []
-
-        let firstPage = try await discoverPage(provider: provider, sortBy: sortBy, page: 1)
-        results.append(contentsOf: firstPage.results.map { ($0, provider) })
-        await counter.increment(by: 1)
-
-        let pageLimit = min(pages, max(firstPage.totalPages, 1))
-        guard pageLimit > 1 else { return results }
-
-        // Fetch pages in batches to respect rate limits
-        let batches = stride(from: 2, through: pageLimit, by: maxConcurrentRequests)
-        for batchStart in batches {
-            let batchEnd = min(batchStart + maxConcurrentRequests - 1, pageLimit)
-
-            try await withThrowingTaskGroup(of: TMDBMovieResponse.self) { group in
-                for page in batchStart...batchEnd {
-                    group.addTask {
-                        try await self.discoverPage(provider: provider, sortBy: sortBy, page: page)
-                    }
-                }
-
-                for try await response in group {
-                    for movie in response.results {
-                        results.append((movie, provider))
-                    }
-                    await counter.increment(by: 1)
-                }
-            }
-
-            try await Task.sleep(nanoseconds: 350_000_000)
-        }
-
         return results
     }
-
-    // MARK: - Single discover page
-
-    private func discoverPage(provider: StreamingProvider, sortBy: String, page: Int) async throws -> TMDBMovieResponse {
-        var components = URLComponents(string: "\(baseURL)/discover/movie")!
-        components.queryItems = [
-            URLQueryItem(name: "api_key",              value: apiKey),
-            URLQueryItem(name: "language",             value: language),
-            URLQueryItem(name: "sort_by",              value: sortBy),
-            URLQueryItem(name: "vote_count.gte",       value: "\(minimumVotes)"),
-            URLQueryItem(name: "with_watch_providers", value: "\(provider.rawValue)"),
-            URLQueryItem(name: "watch_region",         value: "DE"),
-            URLQueryItem(name: "page",                 value: "\(page)")
-        ]
-
-        let (data, response) = try await fetchData(from: components.url!)
-        if isPageLimitResponse(data: data, response: response) {
-            return TMDBMovieResponse(results: [], totalPages: max(page - 1, 1), totalResults: 0)
-        }
-        try validate(response: response, data: data)
-
-        return try JSONDecoder().decode(TMDBMovieResponse.self, from: data)
-    }
-
-    // MARK: - Series fetch
 
     func fetchSeriesWithProviders(
         progressCallback: @escaping @Sendable (Double, String) -> Void
@@ -167,50 +66,95 @@ actor TMDBService {
 
         await MainActor.run { progressCallback(0.0, String(localized: "progress.fetching_series")) }
 
+        let results = try await fetchWithProviders(
+            endpoint: "discover/tv",
+            dateSortField: "first_air_date.desc",
+            progressCallback: progressCallback,
+            responseType: TMDBTVResponse.self,
+            emptyResponseFactory: {
+                TMDBTVResponse(results: [], totalPages: 0, totalResults: 0)
+            }
+        )
+
+        await MainActor.run { progressCallback(1.0, String(localized: "progress.done")) }
+        return results
+    }
+
+    // MARK: - Generic fetch with providers
+
+    private func fetchWithProviders<ResponseType: TMDBResponse>(
+        endpoint: String,
+        dateSortField: String,
+        progressCallback: @escaping @Sendable (Double, String) -> Void,
+        responseType: ResponseType.Type,
+        emptyResponseFactory: @escaping () -> ResponseType
+    ) async throws -> [Movie] {
         let providers = StreamingProvider.allCases
-        let seriesPagesRating  = 15
-        let seriesPagesDate    = 15
-        let seriesPagesPopular = 15
-        let totalUnits = Double(providers.count * (seriesPagesRating + seriesPagesDate + seriesPagesPopular))
+        let totalUnits = Double(providers.count * (pagesPerRatingSort + pagesPerDateSort + pagesPerPopularSort))
         let counter = ProgressCounter(total: totalUnits, callback: progressCallback)
 
-        var seriesMap: [Int: Movie] = [:]
+        var resultsMap: [Int: Movie] = [:]
 
-        func merge(_ results: [(TMDBTVShow, StreamingProvider)]) {
-            for (show, provider) in results {
-                if var existing = seriesMap[show.id] {
+        func merge(_ results: [(ResponseType.Item, StreamingProvider)]) {
+            for (item, provider) in results {
+                if var existing = resultsMap[item.id] {
                     if !existing.availableOn.contains(provider) {
                         existing.availableOn.append(provider)
                     }
-                    seriesMap[show.id] = existing
+                    resultsMap[item.id] = existing
                 } else {
-                    seriesMap[show.id] = show.toMovie(providers: [provider])
+                    resultsMap[item.id] = item.toMovie(providers: [provider])
                 }
             }
         }
 
         for provider in providers {
-            merge(try await fetchAllTVPages(for: provider, sortBy: "vote_average.desc",
-                                            pages: seriesPagesRating, counter: counter))
-            merge(try await fetchAllTVPages(for: provider, sortBy: "first_air_date.desc",
-                                            pages: seriesPagesDate, counter: counter))
-            merge(try await fetchAllTVPages(for: provider, sortBy: "popularity.desc",
-                                            pages: seriesPagesPopular, counter: counter))
+            merge(try await fetchPages(
+                endpoint: endpoint,
+                provider: provider,
+                sortBy: "vote_average.desc",
+                pages: pagesPerRatingSort,
+                counter: counter,
+                responseType: responseType,
+                emptyResponseFactory: emptyResponseFactory
+            ))
+            merge(try await fetchPages(
+                endpoint: endpoint,
+                provider: provider,
+                sortBy: dateSortField,
+                pages: pagesPerDateSort,
+                counter: counter,
+                responseType: responseType,
+                emptyResponseFactory: emptyResponseFactory
+            ))
+            merge(try await fetchPages(
+                endpoint: endpoint,
+                provider: provider,
+                sortBy: "popularity.desc",
+                pages: pagesPerPopularSort,
+                counter: counter,
+                responseType: responseType,
+                emptyResponseFactory: emptyResponseFactory
+            ))
         }
 
-        await MainActor.run { progressCallback(1.0, String(localized: "progress.done")) }
-        return Array(seriesMap.values).sorted { $0.voteAverage > $1.voteAverage }
+        return Array(resultsMap.values).sorted { $0.voteAverage > $1.voteAverage }
     }
 
-    private func fetchAllTVPages(
-        for provider: StreamingProvider,
+    // MARK: - Generic fetch all pages
+
+    private func fetchPages<ResponseType: TMDBResponse>(
+        endpoint: String,
+        provider: StreamingProvider,
         sortBy: String,
         pages: Int,
-        counter: ProgressCounter
-    ) async throws -> [(TMDBTVShow, StreamingProvider)] {
-        var results: [(TMDBTVShow, StreamingProvider)] = []
+        counter: ProgressCounter,
+        responseType: ResponseType.Type,
+        emptyResponseFactory: () -> ResponseType
+    ) async throws -> [(ResponseType.Item, StreamingProvider)] {
+        var results: [(ResponseType.Item, StreamingProvider)] = []
 
-        let firstPage = try await discoverTVPage(provider: provider, sortBy: sortBy, page: 1)
+        let firstPage = try await discoverPage(endpoint: endpoint, provider: provider, sortBy: sortBy, page: 1, responseType: responseType, emptyResponseFactory: emptyResponseFactory)
         results.append(contentsOf: firstPage.results.map { ($0, provider) })
         await counter.increment(by: 1)
 
@@ -220,24 +164,39 @@ actor TMDBService {
         let batches = stride(from: 2, through: pageLimit, by: maxConcurrentRequests)
         for batchStart in batches {
             let batchEnd = min(batchStart + maxConcurrentRequests - 1, pageLimit)
-            try await withThrowingTaskGroup(of: TMDBTVResponse.self) { group in
+
+            try await withThrowingTaskGroup(of: ResponseType.self) { group in
                 for page in batchStart...batchEnd {
                     group.addTask {
-                        try await self.discoverTVPage(provider: provider, sortBy: sortBy, page: page)
+                        try await self.discoverPage(endpoint: endpoint, provider: provider, sortBy: sortBy, page: page, responseType: responseType, emptyResponseFactory: emptyResponseFactory)
                     }
                 }
+
                 for try await response in group {
-                    for show in response.results { results.append((show, provider)) }
+                    for item in response.results {
+                        results.append((item, provider))
+                    }
                     await counter.increment(by: 1)
                 }
             }
+
             try await Task.sleep(nanoseconds: 350_000_000)
         }
+
         return results
     }
 
-    private func discoverTVPage(provider: StreamingProvider, sortBy: String, page: Int) async throws -> TMDBTVResponse {
-        var components = URLComponents(string: "\(baseURL)/discover/tv")!
+    // MARK: - Generic discover page
+
+    private func discoverPage<ResponseType: TMDBResponse>(
+        endpoint: String,
+        provider: StreamingProvider,
+        sortBy: String,
+        page: Int,
+        responseType: ResponseType.Type,
+        emptyResponseFactory: () -> ResponseType
+    ) async throws -> ResponseType {
+        var components = URLComponents(string: "\(baseURL)/\(endpoint)")!
         components.queryItems = [
             URLQueryItem(name: "api_key",              value: apiKey),
             URLQueryItem(name: "language",             value: language),
@@ -250,10 +209,11 @@ actor TMDBService {
 
         let (data, response) = try await fetchData(from: components.url!)
         if isPageLimitResponse(data: data, response: response) {
-            return TMDBTVResponse(results: [], totalPages: max(page - 1, 1), totalResults: 0)
+            return emptyResponseFactory()
         }
         try validate(response: response, data: data)
-        return try JSONDecoder().decode(TMDBTVResponse.self, from: data)
+
+        return try JSONDecoder().decode(ResponseType.self, from: data)
     }
 
     // MARK: - Series details
